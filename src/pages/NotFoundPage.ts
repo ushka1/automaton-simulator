@@ -3,7 +3,7 @@ class NotFoundPage extends HTMLElement {
     super();
 
     const template = document.getElementById(
-      'not-found-page',
+      'as-not-found-page',
     ) as HTMLTemplateElement;
     const content = template.content.cloneNode(true);
     const shadowRoot = this.attachShadow({ mode: 'open' });

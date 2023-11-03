@@ -1,50 +1,43 @@
-import './RouterLink';
+import { PathPublisher, PathSubscriber } from './PathPublisher';
 
-type Routes = { [path: string]: HTMLElement };
+class Router extends HTMLElement implements PathSubscriber {
+  private routingTable: { [path: string]: Node } = {};
 
-export class Router {
-  constructor(
-    private routes: Routes,
-    private defaultPage: HTMLElement,
-    private mountPoint: HTMLElement,
-  ) {
-    this.setPushStateProxy();
-    this.setReplaceStateProxy();
-    this.setPopStateListener();
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    PathPublisher.getInstance().subscribe(this);
+  }
+
+  connectedCallback() {
+    const routes = this.querySelectorAll(
+      ':scope > template[is="as-route"]',
+    ) as unknown as HTMLTemplateElement[];
+
+    routes.forEach((route) => {
+      const path = route.getAttribute('path')!;
+      const content = route.content.firstElementChild?.cloneNode(true);
+      if (content) {
+        this.routingTable[path] = content;
+      }
+    });
 
     this.render(location.pathname);
   }
 
-  // history.pushState()
-  private setPushStateProxy() {
-    history.pushState = new Proxy(history.pushState, {
-      apply: (target, thisArg, args) => {
-        target.apply(thisArg, args as Parameters<typeof history.pushState>);
-        this.render(args[2]);
-      },
-    });
-  }
-
-  // history.replaceState()
-  private setReplaceStateProxy() {
-    history.replaceState = new Proxy(history.replaceState, {
-      apply: (target, thisArg, args) => {
-        target.apply(thisArg, args as Parameters<typeof history.replaceState>);
-        this.render(args[2]);
-      },
-    });
-  }
-
-  // history.back()
-  // history.forward()
-  private setPopStateListener() {
-    window.addEventListener('popstate', () => {
-      this.render(location.pathname);
-    });
+  onPathUpdate(path: string): void {
+    this.render(path);
   }
 
   private render(path: string) {
-    const page = this.routes[path] ?? this.defaultPage;
-    this.mountPoint.replaceChildren(page);
+    const page = this.routingTable[path] ?? this.routingTable['*'];
+
+    if (page) {
+      this.shadowRoot!.replaceChildren(page);
+    } else {
+      this.shadowRoot!.replaceChildren();
+    }
   }
 }
+
+customElements.define('as-router', Router);

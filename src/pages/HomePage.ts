@@ -2,11 +2,11 @@ class HomePage extends HTMLElement {
   constructor() {
     super();
 
+    const shadowRoot = this.attachShadow({ mode: 'open' });
     const template = document.getElementById(
-      'home-page',
+      'as-home-page',
     ) as HTMLTemplateElement;
     const content = template.content.cloneNode(true);
-    const shadowRoot = this.attachShadow({ mode: 'open' });
     shadowRoot.appendChild(content);
   }
 }

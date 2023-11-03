@@ -1,2 +1,2 @@
-import './config/routing';
 import './pages';
+import './router';

@@ -1,11 +1,12 @@
+import { HistoryProxy } from './HistoryProxy';
+
 class RouterLink extends HTMLAnchorElement {
   constructor() {
     super();
-
     this.addEventListener('click', (event) => {
       event.preventDefault();
       const path = this.getAttribute('href');
-      window.history.pushState({}, '', path);
+      HistoryProxy.getInstance().pushState({}, '', path);
     });
   }
 }

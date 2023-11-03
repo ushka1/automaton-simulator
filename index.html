@@ -13,17 +13,27 @@
       <a is="as-router-link" href="/xyz">Not Found Page</a>
     </nav>
 
-    <div id="root-router"></div>
+    <as-router>
+      <template is="as-route" path="/">
+        <as-home-page></as-home-page>
+      </template>
+      <template is="as-route" path="/about">
+        <as-about-page></as-about-page>
+      </template>
+      <template is="as-route" path="*">
+        <as-not-found-page></as-not-found-page>
+      </template>
+    </as-router>
 
-    <template id="home-page">
+    <template id="as-home-page">
       <h1>Home Page</h1>
     </template>
 
-    <template id="about-page">
+    <template id="as-about-page">
       <h1>About Page</h1>
     </template>
 
-    <template id="not-found-page">
+    <template id="as-not-found-page">
       <h1>Not Found Page</h1>
     </template>
 
