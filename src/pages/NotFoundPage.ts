@@ -1,11 +1,13 @@
-export class NotFoundPage extends HTMLElement {
+class NotFoundPage extends HTMLElement {
   constructor() {
     super();
-    this.render();
-  }
 
-  render() {
-    this.innerHTML = '<h1>404 Not Found</h1>';
+    const template = document.getElementById(
+      'not-found-page',
+    ) as HTMLTemplateElement;
+    const content = template.content.cloneNode(true);
+    const shadowRoot = this.attachShadow({ mode: 'open' });
+    shadowRoot.appendChild(content);
   }
 }
 

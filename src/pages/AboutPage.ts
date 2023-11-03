@@ -1,11 +1,13 @@
-export class AboutPage extends HTMLElement {
+class AboutPage extends HTMLElement {
   constructor() {
     super();
-    this.render();
-  }
 
-  render() {
-    this.innerHTML = '<h1>About Page</h1>';
+    const template = document.getElementById(
+      'about-page',
+    ) as HTMLTemplateElement;
+    const content = template.content.cloneNode(true);
+    const shadowRoot = this.attachShadow({ mode: 'open' });
+    shadowRoot.appendChild(content);
   }
 }
 

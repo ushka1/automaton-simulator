@@ -1,28 +1,18 @@
-import { NotFoundPage } from './pages/NotFoundPage';
+import './RouterLink';
 
 type Routes = { [path: string]: HTMLElement };
 
-/**
- * Router utilizing the History API.
- */
-export class Router extends HTMLElement {
-  private path: string;
-  private routes: Routes;
-
-  constructor(routes: Routes) {
-    super();
-    this.path = location.pathname;
-    this.routes = routes;
-
+export class Router {
+  constructor(
+    private routes: Routes,
+    private defaultPage: HTMLElement,
+    private mountPoint: HTMLElement,
+  ) {
     this.setPushStateProxy();
     this.setReplaceStateProxy();
     this.setPopStateListener();
-    this.render();
-  }
 
-  private setPath(path: string) {
-    this.path = path;
-    this.render();
+    this.render(location.pathname);
   }
 
   // history.pushState()
@@ -30,7 +20,7 @@ export class Router extends HTMLElement {
     history.pushState = new Proxy(history.pushState, {
       apply: (target, thisArg, args) => {
         target.apply(thisArg, args as Parameters<typeof history.pushState>);
-        this.setPath(args[2]);
+        this.render(args[2]);
       },
     });
   }
@@ -40,7 +30,7 @@ export class Router extends HTMLElement {
     history.replaceState = new Proxy(history.replaceState, {
       apply: (target, thisArg, args) => {
         target.apply(thisArg, args as Parameters<typeof history.replaceState>);
-        this.setPath(args[2]);
+        this.render(args[2]);
       },
     });
   }
@@ -49,13 +39,12 @@ export class Router extends HTMLElement {
   // history.forward()
   private setPopStateListener() {
     window.addEventListener('popstate', () => {
-      this.setPath(location.pathname);
+      this.render(location.pathname);
     });
   }
 
-  private render() {
-    this.replaceChildren(this.routes[this.path] ?? new NotFoundPage());
+  private render(path: string) {
+    const page = this.routes[path] ?? this.defaultPage;
+    this.mountPoint.replaceChildren(page);
   }
 }
-
-customElements.define('as-router', Router);

@@ -7,7 +7,26 @@
     <title>Vite + TS</title>
   </head>
   <body>
-    <div id="root"></div>
+    <nav>
+      <a is="as-router-link" href="/">Home</a>
+      <a is="as-router-link" href="/about">About</a>
+      <a is="as-router-link" href="/xyz">Not Found Page</a>
+    </nav>
+
+    <div id="root-router"></div>
+
+    <template id="home-page">
+      <h1>Home Page</h1>
+    </template>
+
+    <template id="about-page">
+      <h1>About Page</h1>
+    </template>
+
+    <template id="not-found-page">
+      <h1>Not Found Page</h1>
+    </template>
+
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>

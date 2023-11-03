@@ -1,11 +1,13 @@
-export class HomePage extends HTMLElement {
+class HomePage extends HTMLElement {
   constructor() {
     super();
-    this.render();
-  }
 
-  render() {
-    this.innerHTML = '<h1>Home Page</h1>';
+    const template = document.getElementById(
+      'home-page',
+    ) as HTMLTemplateElement;
+    const content = template.content.cloneNode(true);
+    const shadowRoot = this.attachShadow({ mode: 'open' });
+    shadowRoot.appendChild(content);
   }
 }
 
