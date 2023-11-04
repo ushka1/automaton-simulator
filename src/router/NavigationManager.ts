@@ -1,26 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { PathPublisher } from './PathPublisher';
+import { EventPublisher } from './EventPublisher';
 
-export class HistoryProxy implements History {
+class NavigationManager implements History {
   /* ========================= SINGLETON ========================= */
 
-  private static instance: HistoryProxy;
+  private static instance: NavigationManager;
   private constructor() {
     this.setPopstateListener();
   }
 
-  static getInstance(): HistoryProxy {
-    if (!HistoryProxy.instance) {
-      HistoryProxy.instance = new HistoryProxy();
+  static getInstance(): NavigationManager {
+    if (!NavigationManager.instance) {
+      NavigationManager.instance = new NavigationManager();
     }
-    return HistoryProxy.instance;
+    return NavigationManager.instance;
   }
 
-  /* ========================= BUSINESS ========================= */
+  /* ========================= OBSERVER ========================= */
+
+  private eventPublisher = new EventPublisher<{
+    path: [path: string];
+  }>();
+
+  get subscribe() {
+    return this.eventPublisher.subscribe;
+  }
+
+  get unsubscribe() {
+    return this.eventPublisher.unsubscribe;
+  }
+
+  /* ========================= PROXY ========================= */
 
   private realHistory = window.history;
-  private pathPublisher = PathPublisher.getInstance();
 
   get state(): any {
     return this.realHistory.state;
@@ -56,7 +69,7 @@ export class HistoryProxy implements History {
     url?: string | URL | null | undefined,
   ): void {
     this.realHistory.pushState(data, unused, url);
-    this.pathPublisher.publish(location.pathname);
+    this.eventPublisher.publish('path', location.pathname);
   }
 
   replaceState(
@@ -65,12 +78,14 @@ export class HistoryProxy implements History {
     url?: string | URL | null | undefined,
   ): void {
     this.realHistory.replaceState(data, unused, url);
-    this.pathPublisher.publish(location.pathname);
+    this.eventPublisher.publish('path', location.pathname);
   }
 
   private setPopstateListener() {
     window.addEventListener('popstate', () => {
-      this.pathPublisher.publish(location.pathname);
+      this.eventPublisher.publish('path', location.pathname);
     });
   }
 }
+
+export const navigationManager = NavigationManager.getInstance();

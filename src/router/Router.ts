@@ -1,12 +1,11 @@
-import { PathPublisher, PathSubscriber } from './PathPublisher';
+import { navigationManager } from './NavigationManager';
 
-class Router extends HTMLElement implements PathSubscriber {
+class Router extends HTMLElement {
   private routingTable: { [path: string]: Node } = {};
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    PathPublisher.getInstance().subscribe(this);
   }
 
   connectedCallback() {
@@ -23,11 +22,17 @@ class Router extends HTMLElement implements PathSubscriber {
     });
 
     this.render(location.pathname);
+
+    navigationManager.subscribe('path', this.onPathChange);
   }
 
-  onPathUpdate(path: string): void {
-    this.render(path);
+  disconnectedCallback() {
+    navigationManager.unsubscribe('path', this.onPathChange);
   }
+
+  private onPathChange = (path: string) => {
+    this.render(path);
+  };
 
   private render(path: string) {
     const page = this.routingTable[path] ?? this.routingTable['*'];

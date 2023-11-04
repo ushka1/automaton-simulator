@@ -3,10 +3,9 @@ import './Router';
 import './RouterLink';
 
 /**
- * Facade for the router module.
+ * A facade for simplified router management.
+ *
+ * Provides easy access to the `navigationManager` for streamlined navigation control.
  */
 
-export { HistoryProxy } from './HistoryProxy';
-
-export { PathPublisher } from './PathPublisher';
-export type { PathSubscriber } from './PathPublisher';
+export { navigationManager } from './NavigationManager';

@@ -3,7 +3,6 @@
 ## High Priority
 
 1. Add docstrings.
-1. Better naming for `HistoryProxy` and `PathPublisher`.
 
 ## Medium Priority
 
