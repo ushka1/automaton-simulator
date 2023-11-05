@@ -1,12 +1,19 @@
+import styles from './AboutPage.css?inline';
+
 class AboutPage extends HTMLElement {
   constructor() {
     super();
+
+    const shadowRoot = this.attachShadow({ mode: 'open' });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(styles);
+    shadowRoot.adoptedStyleSheets = [sheet];
 
     const template = document.getElementById(
       'as-about-page',
     ) as HTMLTemplateElement;
     const content = template.content.cloneNode(true);
-    const shadowRoot = this.attachShadow({ mode: 'open' });
     shadowRoot.appendChild(content);
   }
 }

@@ -5,5 +5,6 @@ export default defineConfig({
   plugins: [eslint()],
   server: {
     port: 3000,
+    hmr: true,
   },
 });
