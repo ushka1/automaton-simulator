@@ -11,14 +11,13 @@
     />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <link rel="stylesheet" href="/index.css" />
-    <title>Vite + TS</title>
+    <title>Automaton Simulator</title>
     <script type="module" src="/src/index.ts" defer></script>
   </head>
   <body>
-    <nav>
+    <nav class="appbar">
       <a is="as-router-link" href="/">Home</a>
       <a is="as-router-link" href="/about">About</a>
-      <a is="as-router-link" href="/xyz">Not Found Page</a>
     </nav>
 
     <as-router>
@@ -35,8 +34,6 @@
 
     <template id="as-home-page">
       <h1>Home Page</h1>
-      <h1>Home Page</h1>
-      <h1>Home Page</h1>
     </template>
 
     <template id="as-about-page">
@@ -44,7 +41,7 @@
     </template>
 
     <template id="as-not-found-page">
-      <h1>Not Found Page</h1>
+      <h1>404 - Page Not Found</h1>
     </template>
   </body>
 </html>

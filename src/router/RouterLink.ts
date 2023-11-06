@@ -18,6 +18,23 @@ class RouterLink extends HTMLAnchorElement {
       navigationManager.pushState({}, '', path);
     });
   }
+
+  connectedCallback() {
+    this.onPathChange(location.pathname);
+    navigationManager.subscribe('path', this.onPathChange);
+  }
+
+  disconnectedCallback() {
+    navigationManager.unsubscribe('path', this.onPathChange);
+  }
+
+  private onPathChange = (path: string) => {
+    if (path === this.getAttribute('href')) {
+      this.classList.add('active');
+    } else {
+      this.classList.remove('active');
+    }
+  };
 }
 
 customElements.define('as-router-link', RouterLink, { extends: 'a' });

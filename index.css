@@ -3,3 +3,20 @@
 :root {
   font-family: 'Roboto', sans-serif;
 }
+
+.appbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+
+  a {
+    color: black;
+    text-decoration: none;
+
+    &.active {
+      color: green;
+    }
+  }
+}

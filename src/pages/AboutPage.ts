@@ -1,7 +1,5 @@
 import styles from './AboutPage.css?inline';
 
-console.log(styles);
-
 class AboutPage extends HTMLElement {
   constructor() {
     super();
