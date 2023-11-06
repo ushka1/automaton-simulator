@@ -44,6 +44,12 @@ const importHtmlPartialsPlugin = {
 
 export default defineConfig({
   plugins: [eslint(), importHtmlPartialsPlugin],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@css': path.resolve(__dirname, './src/css'),
+    },
+  },
   server: {
     port: 3000,
     hmr: true,

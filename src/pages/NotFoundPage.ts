@@ -1,14 +1,11 @@
-import styles from './NotFoundPage.css?inline';
+import { notFoundPageSheet, sharedSheet } from '@css/index';
 
 class NotFoundPage extends HTMLElement {
   constructor() {
     super();
 
     const shadowRoot = this.attachShadow({ mode: 'open' });
-
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(styles);
-    shadowRoot.adoptedStyleSheets = [sheet];
+    shadowRoot.adoptedStyleSheets = [sharedSheet, notFoundPageSheet];
 
     const template = document.getElementById(
       'as-not-found-page',

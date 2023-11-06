@@ -1,14 +1,11 @@
-import styles from './AboutPage.css?inline';
+import { aboutPageSheet, sharedSheet } from '@css/index';
 
 class AboutPage extends HTMLElement {
   constructor() {
     super();
 
     const shadowRoot = this.attachShadow({ mode: 'open' });
-
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(styles);
-    shadowRoot.adoptedStyleSheets = [sheet];
+    shadowRoot.adoptedStyleSheets = [sharedSheet, aboutPageSheet];
 
     const template = document.getElementById(
       'as-about-page',

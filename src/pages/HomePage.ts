@@ -1,14 +1,11 @@
-import styles from './HomePage.css?inline';
+import { homePageSheet, sharedSheet } from '@css/index';
 
 class HomePage extends HTMLElement {
   constructor() {
     super();
 
     const shadowRoot = this.attachShadow({ mode: 'open' });
-
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(styles);
-    shadowRoot.adoptedStyleSheets = [sheet];
+    shadowRoot.adoptedStyleSheets = [sharedSheet, homePageSheet];
 
     const template = document.getElementById(
       'as-home-page',
