@@ -1,7 +1,3 @@
-class Route extends HTMLTemplateElement {
-  constructor() {
-    super();
-  }
-}
+class Route extends HTMLTemplateElement {}
 
 customElements.define('as-route', Route, { extends: 'template' });
