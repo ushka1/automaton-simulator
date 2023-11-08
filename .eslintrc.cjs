@@ -25,7 +25,9 @@ const config = {
   },
   plugins: ['@typescript-eslint'],
   ignorePatterns: ['postcss.config.cjs'],
-  rules: {},
+  rules: {
+    '@typescript-eslint/no-unused-vars': 'warn',
+  },
 };
 
 module.exports = config;

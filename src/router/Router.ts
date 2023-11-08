@@ -21,7 +21,7 @@ class Router extends HTMLElement {
       }
     });
 
-    this.render(location.pathname);
+    this.renderRoute(location.pathname);
 
     navigationManager.subscribe('path', this.onPathChange);
   }
@@ -31,10 +31,10 @@ class Router extends HTMLElement {
   }
 
   private onPathChange = (path: string) => {
-    this.render(path);
+    this.renderRoute(path);
   };
 
-  private render(path: string) {
+  private renderRoute(path: string) {
     const page = this.routingTable[path] ?? this.routingTable['*'];
 
     if (page) {
