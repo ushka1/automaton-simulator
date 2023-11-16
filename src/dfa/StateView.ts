@@ -47,6 +47,7 @@ export class StateView {
     this.renderMountPoints();
 
     this.group.addEventListener('mousedown', this.mouseDownListener);
+    this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
 
   getSVG() {
@@ -94,6 +95,13 @@ export class StateView {
     this.group.setAttribute('transform', `translate(${x}, ${y})`);
     this.publishMountPointsUpdate();
   }
+
+  private bringElementToTop = (e: MouseEvent) => {
+    e.preventDefault();
+
+    const parent = this.group.parentNode!;
+    parent.appendChild(this.group);
+  };
 
   /* ========================= MOUNT POINTS ========================= */
 
