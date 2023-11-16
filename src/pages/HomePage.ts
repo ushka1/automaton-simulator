@@ -13,9 +13,7 @@ class HomePage extends HTMLElement {
     ) as HTMLTemplateElement;
     const content = template.content.cloneNode(true);
     shadowRoot.appendChild(content);
-  }
 
-  connectedCallback() {
     render(this.shadowRoot!);
   }
 }

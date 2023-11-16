@@ -2,12 +2,12 @@
 
 ## High Priority
 
-1. Change direction of rendering mount points.
-1. Add method for absolute mount points.
-1. Separate view from model.
+1. Implement line connecting states (transition).
 
 ## Medium Priority
 
+1. Implement separated architecture (view and behavior).
+1. Refactor StateView.
 1. Add docstrings.
 
 ## Low Priority

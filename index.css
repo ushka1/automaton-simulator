@@ -3,4 +3,16 @@
 
 :root {
   font-family: 'Roboto', sans-serif;
+
+  --charcoal: #2c4251;
+  --charcoal-light: #406177;
+  --charcoal-dark: #243642;
+
+  --blue: #1b9aaa;
+  --blue-light: #21bfd4;
+  --blue-dark: #167f8d;
+
+  --bone: #dddbcb;
+  --bone-light: #efeee6;
+  --bone-dark: #cfccb5;
 }

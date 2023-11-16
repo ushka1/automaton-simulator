@@ -5,7 +5,9 @@ export function render(root: ShadowRoot) {
   svg.setAttribute('width', '500');
   svg.setAttribute('height', '500');
   svg.setAttribute('viewBox', '0 0 500 500');
-  svg.style.border = '1px solid black';
+  svg.style.display = 'block';
+  svg.style.margin = 'auto';
+  svg.style.border = '3px solid var(--charcoal-light)';
 
   root.appendChild(svg);
 

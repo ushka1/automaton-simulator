@@ -1,5 +1,6 @@
 import { EventPublisher } from '@/utils/EventPublisher';
 
+const MOVE_STEP = 10;
 const R = 30;
 const MOUNT_POINTS_COUNT = 12;
 const MIN_X = 0;
@@ -22,14 +23,14 @@ export class StateView {
     this.circle.setAttribute('cx', r + '');
     this.circle.setAttribute('cy', r + '');
     this.circle.setAttribute('r', r + '');
-    this.circle.style.fill = 'lightblue';
-    this.circle.style.stroke = 'black';
+    this.circle.style.fill = 'var(--charcoal)';
+    this.circle.style.stroke = 'var(--blue)';
     this.circle.style.strokeWidth = '3';
 
     // Set the text attributes
     this.text.setAttribute('x', r + '');
     this.text.setAttribute('y', r + '');
-    this.text.style.fill = 'black';
+    this.text.style.fill = 'var(--bone)';
     this.text.style.userSelect = 'none';
     this.text.style.textAnchor = 'middle';
     this.text.style.dominantBaseline = 'central';
@@ -73,8 +74,8 @@ export class StateView {
 
   private mouseMoveListener = (e: MouseEvent) => {
     const { clientX: cx, clientY: cy } = e;
-    let x = cx - this.dx - ((cx - this.dx) % 10);
-    let y = cy - this.dy - ((cy - this.dy) % 10);
+    let x = cx - this.dx - ((cx - this.dx) % MOVE_STEP);
+    let y = cy - this.dy - ((cy - this.dy) % MOVE_STEP);
 
     if (x < MIN_X) x = MIN_X;
     if (x > MAX_X - 2 * R) x = MAX_X - 2 * R;
@@ -174,7 +175,7 @@ export class StateView {
       circle.setAttribute('cx', x + '');
       circle.setAttribute('cy', y + '');
       circle.setAttribute('r', '5');
-      circle.style.fill = 'blue';
+      circle.style.fill = 'var(--bone-dark)';
       circle.style.opacity = '0';
       this.group.appendChild(circle);
 
