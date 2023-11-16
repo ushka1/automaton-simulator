@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EventPublisher } from './EventPublisher';
+import { EventPublisher } from '../utils/EventPublisher';
 
 class NavigationManager implements History {
   /* ========================= SINGLETON ========================= */

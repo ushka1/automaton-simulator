@@ -32,16 +32,16 @@ const dfa = new DFA(
   new Set(['q5']),
 );
 
-console.log(dfa.toString());
+// console.log(dfa.toString());
 
-dfa.simulate('abababab');
-dfa.simulate('ababababa');
-dfa.simulate('ababababab');
-dfa.simulate('aaaa');
-dfa.simulate('bbbb');
-dfa.simulate('abababa');
-dfa.simulate('ababababababbb');
-dfa.simulate('abababababaaaa');
-dfa.simulate('abababababaaaabbbbb');
-dfa.simulate('babababa');
-dfa.simulate('babacbaba');
+// dfa.simulate('abababab');
+// dfa.simulate('ababababa');
+// dfa.simulate('ababababab');
+// dfa.simulate('aaaa');
+// dfa.simulate('bbbb');
+// dfa.simulate('abababa');
+// dfa.simulate('ababababababbb');
+// dfa.simulate('abababababaaaa');
+// dfa.simulate('abababababaaaabbbbb');
+// dfa.simulate('babababa');
+// dfa.simulate('babacbaba');
