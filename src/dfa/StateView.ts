@@ -13,7 +13,7 @@ export type StateViewConfig = {
 const defaultConfig: StateViewConfig = {
   x: 0,
   y: 0,
-  r: 30,
+  r: 35,
   hm: 10,
   mountPointsNumber: 12,
   moveStep: 10,
@@ -53,7 +53,7 @@ export class StateView {
     this.circle.setAttribute('r', r + '');
     this.circle.style.fill = 'var(--charcoal)';
     this.circle.style.stroke = 'var(--blue)';
-    this.circle.style.strokeWidth = '3';
+    this.circle.style.strokeWidth = '5';
 
     // Set the text attributes
     this.text.setAttribute('x', r + hm + '');
@@ -78,45 +78,6 @@ export class StateView {
     this.group.addEventListener('mousedown', this.mouseDownListener);
     this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
-
-  // constructor(config: Partial<StateViewConfig> = {}) {
-  //   this.config = {
-  //     ...defaultConfig,
-  //     ...config,
-  //   };
-
-  //   const { x, y, r, name } = this.config;
-
-  //   // Set the circle attributes
-  //   this.circle.setAttribute('cx', r + '');
-  //   this.circle.setAttribute('cy', r + '');
-  //   this.circle.setAttribute('r', r + '');
-  //   this.circle.style.fill = 'var(--charcoal)';
-  //   this.circle.style.stroke = 'var(--blue)';
-  //   this.circle.style.strokeWidth = '3';
-
-  //   // Set the text attributes
-  //   this.text.setAttribute('x', r + '');
-  //   this.text.setAttribute('y', r + '');
-  //   this.text.style.fill = 'var(--bone)';
-  //   this.text.style.userSelect = 'none';
-  //   this.text.style.textAnchor = 'middle';
-  //   this.text.style.dominantBaseline = 'central';
-  //   this.text.textContent = name;
-
-  //   // Set the group attributes
-  //   this.group.style.cursor = 'move';
-
-  //   // Append the circle and text elements to the group
-  //   this.group.appendChild(this.circle);
-  //   this.group.appendChild(this.text);
-  //   this.group.setAttribute('transform', `translate(${x}, ${y})`);
-
-  //   this.renderMountPoints();
-
-  //   this.group.addEventListener('mousedown', this.mouseDownListener);
-  //   this.group.addEventListener('contextmenu', this.bringElementToTop);
-  // }
 
   getSVG() {
     return this.group;
@@ -164,29 +125,6 @@ export class StateView {
     this.updatePosition(x, y);
   };
 
-  // private mouseMoveListener = (e: MouseEvent) => {
-  //   const { r, moveStep } = this.config;
-
-  //   const { clientX: cx, clientY: cy } = e;
-  //   let x = Math.round((cx - this.dx) / moveStep) * moveStep;
-  //   let y = Math.round((cy - this.dy) / moveStep) * moveStep;
-
-  //   const parent = this.group.parentNode;
-  //   if (parent instanceof SVGSVGElement) {
-  //     const min_x = 0;
-  //     const min_y = 0;
-  //     const max_x = parent.width.baseVal.value;
-  //     const max_y = parent.height.baseVal.value;
-
-  //     if (x < min_x) x = min_x;
-  //     if (x > max_x - 2 * r) x = max_x - 2 * r;
-  //     if (y < min_y) y = min_y;
-  //     if (y > max_y - 2 * r) y = max_y - 2 * r;
-  //   }
-
-  //   this.updatePosition(x, y);
-  // };
-
   private mouseUpListener = () => {
     document.removeEventListener('mousemove', this.mouseMoveListener);
     document.removeEventListener('mouseup', this.mouseUpListener);
@@ -222,7 +160,7 @@ export class StateView {
    * Use parametric equations for a circle to get the relative mount points coordinates.
    */
   private getRelativeMountPoints(): { x: number; y: number }[] {
-    const { r, mountPointsNumber: mountPointsNumber } = this.config;
+    const { r, mountPointsNumber } = this.config;
 
     const points: { x: number; y: number }[] = [];
 
@@ -291,19 +229,19 @@ export class StateView {
       this.mountPointsCircles.push(circle);
     }
 
-    this.group.addEventListener('mouseenter', () => this.showMountPoints());
-    this.group.addEventListener('mouseleave', () => this.hideMountPoints());
+    this.group.addEventListener('mouseenter', this.showMountPoints);
+    this.group.addEventListener('mouseleave', this.hideMountPoints);
   }
 
-  private showMountPoints() {
+  private showMountPoints = () => {
     for (const circle of this.mountPointsCircles) {
       circle.style.opacity = '1';
     }
-  }
+  };
 
-  private hideMountPoints() {
+  private hideMountPoints = () => {
     for (const circle of this.mountPointsCircles) {
       circle.style.opacity = '0';
     }
-  }
+  };
 }
