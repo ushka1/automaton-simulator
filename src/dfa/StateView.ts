@@ -13,7 +13,7 @@ export type StateViewConfig = {
 const defaultConfig: StateViewConfig = {
   x: 0,
   y: 0,
-  r: 35,
+  r: 40,
   hm: 10,
   mountPointsNumber: 12,
   moveStep: 10,
@@ -62,6 +62,7 @@ export class StateView {
     this.text.style.userSelect = 'none';
     this.text.style.textAnchor = 'middle';
     this.text.style.dominantBaseline = 'central';
+    this.text.style.fontSize = '1.2rem';
     this.text.textContent = name;
 
     // Set the group attributes
