@@ -18,6 +18,7 @@ export function render(root: ShadowRoot) {
   svg.appendChild(stateView2.getSVG());
 
   stateView1.subscribe('mountpoints', (mountPoints) => {
-    console.log('stateView1', mountPoints[6]);
+    console.log('stateView left', mountPoints[6]);
+    console.log('stateView top', mountPoints[9]);
   });
 }

@@ -1,15 +1,20 @@
 import { EventPublisher } from '@/utils/EventPublisher';
 
-const MOVE_STEP = 10;
 const R = 30;
+const HOVER_MARGIN = 10;
 const MOUNT_POINTS_COUNT = 12;
 const MIN_X = 0;
 const MIN_Y = 0;
 const MAX_X = 500;
 const MAX_Y = 500;
+const MOVE_STEP = 10;
 
 export class StateView {
   private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  private hover = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'circle',
+  );
   private circle = document.createElementNS(
     'http://www.w3.org/2000/svg',
     'circle',
@@ -18,18 +23,25 @@ export class StateView {
 
   constructor(x: number, y: number) {
     const r = R;
+    const hm = HOVER_MARGIN;
+
+    // Set the hover circle attributes
+    this.hover.setAttribute('cx', r + hm + '');
+    this.hover.setAttribute('cy', r + hm + '');
+    this.hover.setAttribute('r', r + hm + '');
+    this.hover.style.fill = 'transparent';
 
     // Set the circle attributes
-    this.circle.setAttribute('cx', r + '');
-    this.circle.setAttribute('cy', r + '');
+    this.circle.setAttribute('cx', r + hm + '');
+    this.circle.setAttribute('cy', r + hm + '');
     this.circle.setAttribute('r', r + '');
     this.circle.style.fill = 'var(--charcoal)';
     this.circle.style.stroke = 'var(--blue)';
     this.circle.style.strokeWidth = '3';
 
     // Set the text attributes
-    this.text.setAttribute('x', r + '');
-    this.text.setAttribute('y', r + '');
+    this.text.setAttribute('x', r + hm + '');
+    this.text.setAttribute('y', r + hm + '');
     this.text.style.fill = 'var(--bone)';
     this.text.style.userSelect = 'none';
     this.text.style.textAnchor = 'middle';
@@ -40,15 +52,51 @@ export class StateView {
     this.group.style.cursor = 'move';
 
     // Append the circle and text elements to the group
+    this.group.appendChild(this.hover);
     this.group.appendChild(this.circle);
     this.group.appendChild(this.text);
-    this.group.setAttribute('transform', `translate(${x}, ${y})`);
+    this.group.setAttribute('transform', `translate(${x - hm}, ${y - hm})`);
 
     this.renderMountPoints();
 
     this.group.addEventListener('mousedown', this.mouseDownListener);
     this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
+
+  // constructor(x: number, y: number) {
+  //   const r = R;
+
+  //   // Set the circle attributes
+  //   this.circle.setAttribute('cx', r + '');
+  //   this.circle.setAttribute('cy', r + '');
+  //   this.circle.setAttribute('r', r + '');
+  //   this.circle.style.fill = 'var(--charcoal)';
+  //   this.circle.style.stroke = 'var(--blue)';
+  //   this.circle.style.strokeWidth = '3';
+
+  //   // Set the text attributes
+  //   this.text.setAttribute('x', r + '');
+  //   this.text.setAttribute('y', r + '');
+  //   this.text.style.fill = 'var(--bone)';
+  //   this.text.style.userSelect = 'none';
+  //   this.text.style.textAnchor = 'middle';
+  //   this.text.style.dominantBaseline = 'central';
+  //   this.text.textContent = 'Q1';
+
+  //   // Set the group attributes
+  //   this.group.style.cursor = 'move';
+
+  //   // Append the circle and text elements to the group
+  //   this.group.appendChild(this.outerCircle);
+  //   this.group.appendChild(this.circle);
+  //   this.group.appendChild(this.text);
+  //   this.group.setAttribute('transform', `translate(${x}, ${y})`);
+
+  //   this.renderMountPoints();
+
+  //   this.group.addEventListener('mousedown', this.mouseDownListener);
+  //   this.group.addEventListener('contextmenu', this.bringElementToTop);
+  // }
 
   getSVG() {
     return this.group;
@@ -63,11 +111,11 @@ export class StateView {
     const { clientX: cx, clientY: cy } = e;
 
     const matrix = this.group.getCTM()!;
-    const gx = matrix.e;
-    const gy = matrix.f;
+    const gx = matrix.e; // group x
+    const gy = matrix.f; // group y
 
-    this.dx = cx - gx;
-    this.dy = cy - gy;
+    this.dx = cx - gx; // delta x
+    this.dy = cy - gy; // delta y
 
     document.addEventListener('mousemove', this.mouseMoveListener);
     document.addEventListener('mouseup', this.mouseUpListener);
@@ -75,16 +123,30 @@ export class StateView {
 
   private mouseMoveListener = (e: MouseEvent) => {
     const { clientX: cx, clientY: cy } = e;
-    let x = cx - this.dx - ((cx - this.dx) % MOVE_STEP);
-    let y = cy - this.dy - ((cy - this.dy) % MOVE_STEP);
+    let x = Math.round((cx - this.dx) / MOVE_STEP) * MOVE_STEP;
+    let y = Math.round((cy - this.dy) / MOVE_STEP) * MOVE_STEP;
 
-    if (x < MIN_X) x = MIN_X;
-    if (x > MAX_X - 2 * R) x = MAX_X - 2 * R;
-    if (y < MIN_Y) y = MIN_Y;
-    if (y > MAX_Y - 2 * R) y = MAX_Y - 2 * R;
+    const hm = HOVER_MARGIN;
+    if (x < MIN_X - hm) x = MIN_X - hm;
+    if (x > MAX_X - 2 * R - hm) x = MAX_X - 2 * R - hm;
+    if (y < MIN_Y - hm) y = MIN_Y - hm;
+    if (y > MAX_Y - 2 * R - hm) y = MAX_Y - 2 * R - hm;
 
     this.updatePosition(x, y);
   };
+
+  // private mouseMoveListener = (e: MouseEvent) => {
+  //   const { clientX: cx, clientY: cy } = e;
+  //   let x = Math.round((cx - this.dx) / MOVE_STEP) * MOVE_STEP;
+  //   let y = Math.round((cy - this.dy) / MOVE_STEP) * MOVE_STEP;
+
+  //   if (x < MIN_X) x = MIN_X;
+  //   if (x > MAX_X - 2 * R) x = MAX_X - 2 * R;
+  //   if (y < MIN_Y) y = MIN_Y;
+  //   if (y > MAX_Y - 2 * R) y = MAX_Y - 2 * R;
+
+  //   this.updatePosition(x, y);
+  // };
 
   private mouseUpListener = () => {
     document.removeEventListener('mousemove', this.mouseMoveListener);
@@ -133,8 +195,8 @@ export class StateView {
     for (let i = 0; i < mountPointsCount; i++) {
       const angle = angleStep * i;
       const radians = (angle * Math.PI) / 180;
-      const x = cx + Math.round(r * Math.cos(radians));
-      const y = cy + Math.round(r * Math.sin(radians));
+      const x = Math.round(cx + r * Math.cos(radians));
+      const y = Math.round(cy + r * Math.sin(radians));
 
       points.push({ x, y });
     }
@@ -185,6 +247,7 @@ export class StateView {
       circle.setAttribute('r', '5');
       circle.style.fill = 'var(--bone-dark)';
       circle.style.opacity = '0';
+      circle.style.transition = 'opacity 0.025s linear';
       this.group.appendChild(circle);
 
       this.mountPointsCircles.push(circle);
