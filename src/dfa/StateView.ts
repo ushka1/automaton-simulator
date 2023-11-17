@@ -1,15 +1,27 @@
 import { EventPublisher } from '@/utils/EventPublisher';
 
-const R = 30;
-const HOVER_MARGIN = 10;
-const MOUNT_POINTS_COUNT = 12;
-const MIN_X = 0;
-const MIN_Y = 0;
-const MAX_X = 500;
-const MAX_Y = 500;
-const MOVE_STEP = 10;
+export type StateViewConfig = {
+  x: number; // x coordinate
+  y: number; // y coordinate
+  r: number; // circle radius
+  hm: number; // hover margin
+  mountPointsNumber: number; // number of mount points
+  moveStep: number; // move step
+  name: string; // state name
+};
+
+const defaultConfig: StateViewConfig = {
+  x: 0,
+  y: 0,
+  r: 30,
+  hm: 10,
+  mountPointsNumber: 12,
+  moveStep: 10,
+  name: '',
+};
 
 export class StateView {
+  private config: StateViewConfig;
   private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private hover = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -21,9 +33,13 @@ export class StateView {
   );
   private text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 
-  constructor(x: number, y: number) {
-    const r = R;
-    const hm = HOVER_MARGIN;
+  constructor(config: Partial<StateViewConfig> = {}) {
+    this.config = {
+      ...defaultConfig,
+      ...config,
+    };
+
+    const { x, y, r, hm, name } = this.config;
 
     // Set the hover circle attributes
     this.hover.setAttribute('cx', r + hm + '');
@@ -46,7 +62,7 @@ export class StateView {
     this.text.style.userSelect = 'none';
     this.text.style.textAnchor = 'middle';
     this.text.style.dominantBaseline = 'central';
-    this.text.textContent = 'Q1';
+    this.text.textContent = name;
 
     // Set the group attributes
     this.group.style.cursor = 'move';
@@ -63,8 +79,13 @@ export class StateView {
     this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
 
-  // constructor(x: number, y: number) {
-  //   const r = R;
+  // constructor(config: Partial<StateViewConfig> = {}) {
+  //   this.config = {
+  //     ...defaultConfig,
+  //     ...config,
+  //   };
+
+  //   const { x, y, r, name } = this.config;
 
   //   // Set the circle attributes
   //   this.circle.setAttribute('cx', r + '');
@@ -81,13 +102,12 @@ export class StateView {
   //   this.text.style.userSelect = 'none';
   //   this.text.style.textAnchor = 'middle';
   //   this.text.style.dominantBaseline = 'central';
-  //   this.text.textContent = 'Q1';
+  //   this.text.textContent = name;
 
   //   // Set the group attributes
   //   this.group.style.cursor = 'move';
 
   //   // Append the circle and text elements to the group
-  //   this.group.appendChild(this.outerCircle);
   //   this.group.appendChild(this.circle);
   //   this.group.appendChild(this.text);
   //   this.group.setAttribute('transform', `translate(${x}, ${y})`);
@@ -122,28 +142,47 @@ export class StateView {
   };
 
   private mouseMoveListener = (e: MouseEvent) => {
-    const { clientX: cx, clientY: cy } = e;
-    let x = Math.round((cx - this.dx) / MOVE_STEP) * MOVE_STEP;
-    let y = Math.round((cy - this.dy) / MOVE_STEP) * MOVE_STEP;
+    const { r, hm, moveStep } = this.config;
 
-    const hm = HOVER_MARGIN;
-    if (x < MIN_X - hm) x = MIN_X - hm;
-    if (x > MAX_X - 2 * R - hm) x = MAX_X - 2 * R - hm;
-    if (y < MIN_Y - hm) y = MIN_Y - hm;
-    if (y > MAX_Y - 2 * R - hm) y = MAX_Y - 2 * R - hm;
+    const { clientX: cx, clientY: cy } = e;
+    let x = Math.round((cx - this.dx) / moveStep) * moveStep;
+    let y = Math.round((cy - this.dy) / moveStep) * moveStep;
+
+    const parent = this.group.parentNode;
+    if (parent instanceof SVGSVGElement) {
+      const min_x = 0;
+      const min_y = 0;
+      const max_x = parent.width.baseVal.value;
+      const max_y = parent.height.baseVal.value;
+
+      if (x < min_x - hm) x = min_x - hm;
+      if (x > max_x - 2 * r - hm) x = max_x - 2 * r - hm;
+      if (y < min_y - hm) y = min_y - hm;
+      if (y > max_y - 2 * r - hm) y = max_y - 2 * r - hm;
+    }
 
     this.updatePosition(x, y);
   };
 
   // private mouseMoveListener = (e: MouseEvent) => {
-  //   const { clientX: cx, clientY: cy } = e;
-  //   let x = Math.round((cx - this.dx) / MOVE_STEP) * MOVE_STEP;
-  //   let y = Math.round((cy - this.dy) / MOVE_STEP) * MOVE_STEP;
+  //   const { r, moveStep } = this.config;
 
-  //   if (x < MIN_X) x = MIN_X;
-  //   if (x > MAX_X - 2 * R) x = MAX_X - 2 * R;
-  //   if (y < MIN_Y) y = MIN_Y;
-  //   if (y > MAX_Y - 2 * R) y = MAX_Y - 2 * R;
+  //   const { clientX: cx, clientY: cy } = e;
+  //   let x = Math.round((cx - this.dx) / moveStep) * moveStep;
+  //   let y = Math.round((cy - this.dy) / moveStep) * moveStep;
+
+  //   const parent = this.group.parentNode;
+  //   if (parent instanceof SVGSVGElement) {
+  //     const min_x = 0;
+  //     const min_y = 0;
+  //     const max_x = parent.width.baseVal.value;
+  //     const max_y = parent.height.baseVal.value;
+
+  //     if (x < min_x) x = min_x;
+  //     if (x > max_x - 2 * r) x = max_x - 2 * r;
+  //     if (y < min_y) y = min_y;
+  //     if (y > max_y - 2 * r) y = max_y - 2 * r;
+  //   }
 
   //   this.updatePosition(x, y);
   // };
@@ -183,16 +222,15 @@ export class StateView {
    * Use parametric equations for a circle to get the relative mount points coordinates.
    */
   private getRelativeMountPoints(): { x: number; y: number }[] {
-    const points: { x: number; y: number }[] = [];
+    const { r, mountPointsNumber: mountPointsNumber } = this.config;
 
-    const r = R;
-    const mountPointsCount = MOUNT_POINTS_COUNT;
+    const points: { x: number; y: number }[] = [];
 
     const cx = this.circle.cx.baseVal.value;
     const cy = this.circle.cy.baseVal.value;
-    const angleStep = 360 / mountPointsCount;
+    const angleStep = 360 / mountPointsNumber;
 
-    for (let i = 0; i < mountPointsCount; i++) {
+    for (let i = 0; i < mountPointsNumber; i++) {
       const angle = angleStep * i;
       const radians = (angle * Math.PI) / 180;
       const x = Math.round(cx + r * Math.cos(radians));

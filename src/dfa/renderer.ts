@@ -11,10 +11,10 @@ export function render(root: ShadowRoot) {
 
   root.appendChild(svg);
 
-  const stateView1 = new StateView(110, 220);
+  const stateView1 = new StateView({ x: 110, y: 220, name: 'Q1' });
   svg.appendChild(stateView1.getSVG());
 
-  const stateView2 = new StateView(330, 220);
+  const stateView2 = new StateView({ x: 330, y: 220, name: 'Q2' });
   svg.appendChild(stateView2.getSVG());
 
   stateView1.subscribe('mountpoints', (mountPoints) => {
