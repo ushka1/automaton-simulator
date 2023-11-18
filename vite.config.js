@@ -32,6 +32,7 @@ const importHtmlPartialsPlugin = {
       const filePath = match.match(regex)[1];
       let absolutePath;
 
+      // Check if the file path matches any of the aliases defined in vite.config.js.
       const aliases = ctx.server.config.resolve.alias;
       for (const alias in aliases) {
         const { find, replacement } = aliases[alias];
@@ -40,10 +41,12 @@ const importHtmlPartialsPlugin = {
         }
       }
 
+      // If the file path is not an alias, resolve it relative to the vite.config.js file.
       if (!absolutePath) {
         absolutePath = path.resolve(__dirname, filePath);
       }
 
+      // Read the file content and replace the HTML comment with it.
       try {
         const fileContent = fs.readFileSync(absolutePath, 'utf-8');
         transformedHtml = transformedHtml.replace(match, fileContent);

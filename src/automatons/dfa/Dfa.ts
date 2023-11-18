@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-export class DFA {
+export class Dfa {
   constructor(
     private states: Set<string>,
     private alphabet: Set<string>,
