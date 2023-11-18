@@ -1,11 +1,12 @@
+/**
+ * Facade for the router module.
+ *
+ * This module exports functions and components related to the router.
+ * It facilitates navigation management in the application.
+ */
+
 import './Route';
 import './Router';
 import './RouterLink';
-
-/**
- * A facade for simplified router management.
- *
- * Provides easy access to the `navigationManager` for streamlined navigation control.
- */
 
 export { navigationManager } from './NavigationManager';

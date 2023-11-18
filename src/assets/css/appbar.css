@@ -6,11 +6,12 @@
   padding: 1rem 2rem;
 
   a {
-    color: black;
+    color: var(--charcoal-dark);
     text-decoration: none;
+    font-weight: bold;
 
     &.active {
-      color: green;
+      color: var(--blue-dark);
     }
   }
 }

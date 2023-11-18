@@ -22,8 +22,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@css/*": ["src/css/*"]
+      "@css/*": ["src/assets/css/*"],
+      "@html/*": ["src/assets/htm/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "assets"]
 }

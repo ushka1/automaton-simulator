@@ -1,0 +1,3 @@
+class TransitionView {
+  // TBD
+}

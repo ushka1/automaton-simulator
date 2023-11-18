@@ -15,10 +15,7 @@
     <script type="module" src="/src/index.ts" defer></script>
   </head>
   <body>
-    <nav class="appbar">
-      <a is="as-router-link" href="/">Home</a>
-      <a is="as-router-link" href="/about">About</a>
-    </nav>
+    <!-- @include '@html/appbar.html' -->
 
     <as-router>
       <template is="as-route" path="/">
@@ -32,16 +29,8 @@
       </template>
     </as-router>
 
-    <template id="as-home-page">
-      <h1>Home Page</h1>
-    </template>
-
-    <template id="as-about-page">
-      <h1>About Page</h1>
-    </template>
-
-    <template id="as-not-found-page">
-      <h1>404 - Page Not Found</h1>
-    </template>
+    <!-- @include '@html/home-page-template.html' -->
+    <!-- @include '@html/about-page-template.html' -->
+    <!-- @include '@html/not-found-page-template.html' -->
   </body>
 </html>

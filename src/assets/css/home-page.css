@@ -1,0 +1,16 @@
+h1 {
+  text-align: center;
+  color: var(--charcoal);
+}
+
+svg {
+  display: block;
+  margin: auto;
+  border: 4px solid var(--charcoal-light);
+  background-image: conic-gradient(
+    at calc(100% - 1px) calc(100% - 1px),
+    var(--bone-light) 270deg,
+    #ffffff 0
+  );
+  background-size: 10px 10px;
+}
