@@ -1,4 +1,4 @@
-import { DfaRenderer } from '@/automatons/dfa/DfaRenderer';
+import { RenderOrchestrator } from '@/render/RenderOrchestrator';
 import { homePageSheet, sharedSheet } from '@css/index';
 
 class HomePage extends HTMLElement {
@@ -14,7 +14,34 @@ class HomePage extends HTMLElement {
     const content = template.content.cloneNode(true);
     shadowRoot.appendChild(content);
 
-    DfaRenderer.render(this.shadowRoot!);
+    this.setupRenderOrchestrator();
+  }
+
+  setupRenderOrchestrator() {
+    const width = 750;
+    const height = 750;
+    const container = this.shadowRoot!.getElementById('svg-container');
+
+    if (container) {
+      const renderOrchestrator = new RenderOrchestrator({
+        width,
+        height,
+      });
+      container.appendChild(renderOrchestrator.getSvg());
+
+      renderOrchestrator.addStateFromConfig({
+        name: 'Q1',
+        x: Math.round((width / 3 - 35) / 10) * 10,
+        y: Math.round((height / 2 - 35) / 10) * 10,
+      });
+      renderOrchestrator.addStateFromConfig({
+        name: 'Q2',
+        x: Math.round(((2 * width) / 3 - 35) / 10) * 10,
+        y: Math.round((height / 2 - 35) / 10) * 10,
+      });
+    } else {
+      console.error('Could not find svg-container.');
+    }
   }
 }
 

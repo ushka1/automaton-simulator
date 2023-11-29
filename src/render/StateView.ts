@@ -80,7 +80,7 @@ export class StateView {
     this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
 
-  getSVG() {
+  getSvg() {
     return this.group;
   }
 
@@ -214,24 +214,44 @@ export class StateView {
 
     const mountPoints = this.getRelativeMountPoints();
     for (const { x, y } of mountPoints) {
-      const circle = document.createElementNS(
+      const mountPointCircle = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'circle',
       );
 
-      circle.setAttribute('cx', x + '');
-      circle.setAttribute('cy', y + '');
-      circle.setAttribute('r', '5');
-      circle.style.fill = 'var(--bone-dark)';
-      circle.style.opacity = '0';
-      circle.style.transition = 'opacity 0.025s linear';
-      this.group.appendChild(circle);
+      mountPointCircle.setAttribute('cx', x + '');
+      mountPointCircle.setAttribute('cy', y + '');
+      mountPointCircle.setAttribute('r', '5');
+      mountPointCircle.style.fill = 'var(--bone-dark)';
+      mountPointCircle.style.opacity = '0';
+      mountPointCircle.style.transition = 'opacity 0.025s linear';
+      mountPointCircle.style.cursor = 'pointer';
 
-      this.mountPointsCircles.push(circle);
+      this.group.appendChild(mountPointCircle);
+      this.mountPointsCircles.push(mountPointCircle);
+
+      // XXX: poc
+      mountPointCircle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        console.log('start drawing line');
+
+        const mousemoveListener = (e: MouseEvent) => {
+          console.log('update line');
+        };
+
+        const mouseupListener = (e: MouseEvent) => {
+          console.log('stop drawing line');
+          document.removeEventListener('mousemove', mousemoveListener);
+          document.removeEventListener('mouseup', mouseupListener);
+        };
+
+        document.addEventListener('mousemove', mousemoveListener);
+        document.addEventListener('mouseup', mouseupListener);
+      });
+
+      this.group.addEventListener('mouseenter', this.showMountPoints);
+      this.group.addEventListener('mouseleave', this.hideMountPoints);
     }
-
-    this.group.addEventListener('mouseenter', this.showMountPoints);
-    this.group.addEventListener('mouseleave', this.hideMountPoints);
   }
 
   private showMountPoints = () => {
