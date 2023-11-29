@@ -1,4 +1,5 @@
 import { StateView, StateViewConfig } from './StateView';
+import { TransitionView } from './TransitionView';
 
 type RenderOrchestratorConfig = {
   width: number;
@@ -37,6 +38,21 @@ export class RenderOrchestrator {
       this.states.splice(index, 1);
       this.svg.removeChild(state.getSvg());
     }
+  }
+
+  addTransition(stateView1: StateView, stateView2: StateView): void {
+    const transitionView = new TransitionView();
+
+    const startCoords = stateView1.getClosestMountPoint(
+      stateView2.getCenterCoords(),
+    );
+    const endCoords = stateView2.getClosestMountPoint(
+      stateView1.getCenterCoords(),
+    );
+
+    transitionView.setStartCoords(startCoords);
+    transitionView.setEndCoords(endCoords);
+    this.svg.appendChild(transitionView.getSvg());
   }
 
   getSvg(): SVGSVGElement {

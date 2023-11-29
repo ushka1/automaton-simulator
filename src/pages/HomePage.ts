@@ -29,16 +29,18 @@ class HomePage extends HTMLElement {
       });
       container.appendChild(renderOrchestrator.getSvg());
 
-      renderOrchestrator.addStateFromConfig({
+      const q1 = renderOrchestrator.addStateFromConfig({
         name: 'Q1',
         x: Math.round((width / 3 - 35) / 10) * 10,
         y: Math.round((height / 2 - 35) / 10) * 10,
       });
-      renderOrchestrator.addStateFromConfig({
+      const q2 = renderOrchestrator.addStateFromConfig({
         name: 'Q2',
         x: Math.round(((2 * width) / 3 - 35) / 10) * 10,
         y: Math.round((height / 2 - 35) / 10) * 10,
       });
+
+      renderOrchestrator.addTransition(q1, q2);
     } else {
       console.error('Could not find svg-container.');
     }

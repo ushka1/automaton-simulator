@@ -80,6 +80,16 @@ export class StateView {
     this.group.addEventListener('contextmenu', this.bringElementToTop);
   }
 
+  getCenterCoords() {
+    const { gx, gy } = this.getGroupCoords();
+    const { r, hm } = this.config;
+
+    const x = gx + r + hm;
+    const y = gy + r + hm;
+
+    return { x, y };
+  }
+
   getSvg() {
     return this.group;
   }
@@ -89,12 +99,20 @@ export class StateView {
   private dx = 0;
   private dy = 0;
 
-  private mouseDownListener = (e: MouseEvent) => {
-    const { clientX: cx, clientY: cy } = e;
-
+  /**
+   * Top left corner coordinates of the whole group.
+   */
+  private getGroupCoords() {
     const matrix = this.group.getCTM()!;
     const gx = matrix.e; // group x
     const gy = matrix.f; // group y
+
+    return { gx, gy };
+  }
+
+  private mouseDownListener = (e: MouseEvent) => {
+    const { clientX: cx, clientY: cy } = e;
+    const { gx, gy } = this.getGroupCoords();
 
     this.dx = cx - gx; // delta x
     this.dy = cy - gy; // delta y
@@ -200,6 +218,26 @@ export class StateView {
     this.eventPublisher.publish('mountpoints', mountPoints);
   }
 
+  getClosestMountPoint(coords: { x: number; y: number }) {
+    const { x, y } = coords;
+    const mountPoints = this.getAbsoluteMountPoints();
+
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < mountPoints.length; i++) {
+      const { x: mx, y: my } = mountPoints[i];
+      const distance = Math.sqrt((x - mx) ** 2 + (y - my) ** 2);
+
+      if (distance < closestDistance) {
+        closestIndex = i;
+        closestDistance = distance;
+      }
+    }
+
+    return mountPoints[closestIndex];
+  }
+
   /* ========================= MOUNT POINTS DISPLAY ========================= */
 
   /*
@@ -229,25 +267,6 @@ export class StateView {
 
       this.group.appendChild(mountPointCircle);
       this.mountPointsCircles.push(mountPointCircle);
-
-      // XXX: poc
-      mountPointCircle.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        console.log('start drawing line');
-
-        const mousemoveListener = (e: MouseEvent) => {
-          console.log('update line');
-        };
-
-        const mouseupListener = (e: MouseEvent) => {
-          console.log('stop drawing line');
-          document.removeEventListener('mousemove', mousemoveListener);
-          document.removeEventListener('mouseup', mouseupListener);
-        };
-
-        document.addEventListener('mousemove', mousemoveListener);
-        document.addEventListener('mouseup', mouseupListener);
-      });
 
       this.group.addEventListener('mouseenter', this.showMountPoints);
       this.group.addEventListener('mouseleave', this.hideMountPoints);
