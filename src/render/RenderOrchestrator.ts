@@ -20,13 +20,15 @@ export class RenderOrchestrator {
     this.svg = svg;
   }
 
+  /* ========================= CONTROLS ========================= */
+
   addState(state: StateView) {
     this.states.push(state);
     this.svg.appendChild(state.getSvg());
   }
 
   addStateFromConfig(config: Partial<StateViewConfig> = {}): StateView {
-    const state = new StateView(config);
+    const state = new StateView(this, config);
     this.addState(state);
 
     return state;
@@ -42,18 +44,33 @@ export class RenderOrchestrator {
 
   addTransition(stateView1: StateView, stateView2: StateView): void {
     const transitionView = new TransitionView();
+    transitionView.setStartStateView(stateView1, 0);
+    transitionView.setEndStateView(stateView2, 6);
 
-    const startCoords = stateView1.getClosestMountPoint(
-      stateView2.getCenterCoords(),
-    );
-    const endCoords = stateView2.getClosestMountPoint(
-      stateView1.getCenterCoords(),
-    );
-
-    transitionView.setStartCoords(startCoords);
-    transitionView.setEndCoords(endCoords);
     this.svg.appendChild(transitionView.getSvg());
   }
+
+  /* ========================= TRANSITIONS ========================= */
+
+  startNewTransition = (fromState: StateView, mountPointIndex: number) => {
+    const transitionView = new TransitionView();
+    this.svg.appendChild(transitionView.getSvg());
+    transitionView.setStartStateView(fromState, mountPointIndex);
+    transitionView.updateEnd(
+      fromState.getAbsoluteMountPoints()[mountPointIndex],
+    );
+
+    const startNewTransitionMousemove = (e: MouseEvent) => {
+      const x = e.clientX - this.svg.getBoundingClientRect().left;
+      const y = e.clientY - this.svg.getBoundingClientRect().top;
+      transitionView.updateEnd({ x, y });
+    };
+
+    document.addEventListener('mousemove', startNewTransitionMousemove);
+    document.addEventListener('mouseup', () => {
+      document.removeEventListener('mousemove', startNewTransitionMousemove);
+    });
+  };
 
   getSvg(): SVGSVGElement {
     return this.svg;

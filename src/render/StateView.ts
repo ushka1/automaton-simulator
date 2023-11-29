@@ -1,4 +1,5 @@
 import { EventPublisher } from '@/utils/EventPublisher';
+import { RenderOrchestrator } from './RenderOrchestrator';
 
 export type StateViewConfig = {
   x: number; // x coordinate
@@ -21,6 +22,7 @@ const defaultConfig: StateViewConfig = {
 };
 
 export class StateView {
+  private orchestrator: RenderOrchestrator;
   private config: StateViewConfig;
   private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private hover = document.createElementNS(
@@ -33,7 +35,11 @@ export class StateView {
   );
   private text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 
-  constructor(config: Partial<StateViewConfig> = {}) {
+  constructor(
+    orchestrator: RenderOrchestrator,
+    config: Partial<StateViewConfig> = {},
+  ) {
+    this.orchestrator = orchestrator;
     this.config = {
       ...defaultConfig,
       ...config,
@@ -202,7 +208,7 @@ export class StateView {
   /**
    * Use parametric equations for a circle to get the absolute mount points coordinates.
    */
-  private getAbsoluteMountPoints(): { x: number; y: number }[] {
+  getAbsoluteMountPoints(): { x: number; y: number }[] {
     const matrix = this.group.getCTM()!;
     const gx = matrix.e;
     const gy = matrix.f;
@@ -218,7 +224,61 @@ export class StateView {
     this.eventPublisher.publish('mountpoints', mountPoints);
   }
 
-  getClosestMountPoint(coords: { x: number; y: number }) {
+  /* ========================= MOUNT POINTS DISPLAY ========================= */
+
+  /*
+    WARNING: In SVG, the coordinate system starts from the top-left corner,
+    unlike in the conventional coordinate systems where it starts from the bottom-left.
+  */
+
+  private mountPointsCircles: SVGCircleElement[] = [];
+
+  private renderMountPoints() {
+    if (this.mountPointsCircles.length > 0) return;
+
+    const mountPoints = this.getRelativeMountPoints();
+    for (const [i, { x, y }] of mountPoints.entries()) {
+      const mountPointElement = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle',
+      );
+
+      mountPointElement.setAttribute('cx', x + '');
+      mountPointElement.setAttribute('cy', y + '');
+      mountPointElement.setAttribute('r', '5');
+      mountPointElement.style.fill = 'var(--bone-dark)';
+      mountPointElement.style.opacity = '0';
+      mountPointElement.style.transition = 'opacity 0.025s linear';
+      mountPointElement.style.cursor = 'pointer';
+
+      this.group.appendChild(mountPointElement);
+      this.mountPointsCircles.push(mountPointElement);
+
+      mountPointElement.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        this.orchestrator.startNewTransition(this, i);
+      });
+    }
+
+    this.group.addEventListener('mouseenter', this.showMountPoints);
+    this.group.addEventListener('mouseleave', this.hideMountPoints);
+  }
+
+  private showMountPoints = () => {
+    for (const circle of this.mountPointsCircles) {
+      circle.style.opacity = '1';
+    }
+  };
+
+  private hideMountPoints = () => {
+    for (const circle of this.mountPointsCircles) {
+      circle.style.opacity = '0';
+    }
+  };
+
+  /* ========================= MOUNT POINTS UTILS ========================= */
+
+  getClosestMountPointIndex(coords: { x: number; y: number }) {
     const { x, y } = coords;
     const mountPoints = this.getAbsoluteMountPoints();
 
@@ -235,53 +295,6 @@ export class StateView {
       }
     }
 
-    return mountPoints[closestIndex];
+    return closestIndex;
   }
-
-  /* ========================= MOUNT POINTS DISPLAY ========================= */
-
-  /*
-    WARNING: In SVG, the coordinate system starts from the top-left corner,
-    unlike in the conventional coordinate systems where it starts from the bottom-left.
-  */
-
-  private mountPointsCircles: SVGCircleElement[] = [];
-
-  private renderMountPoints() {
-    if (this.mountPointsCircles.length > 0) return;
-
-    const mountPoints = this.getRelativeMountPoints();
-    for (const { x, y } of mountPoints) {
-      const mountPointCircle = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'circle',
-      );
-
-      mountPointCircle.setAttribute('cx', x + '');
-      mountPointCircle.setAttribute('cy', y + '');
-      mountPointCircle.setAttribute('r', '5');
-      mountPointCircle.style.fill = 'var(--bone-dark)';
-      mountPointCircle.style.opacity = '0';
-      mountPointCircle.style.transition = 'opacity 0.025s linear';
-      mountPointCircle.style.cursor = 'pointer';
-
-      this.group.appendChild(mountPointCircle);
-      this.mountPointsCircles.push(mountPointCircle);
-
-      this.group.addEventListener('mouseenter', this.showMountPoints);
-      this.group.addEventListener('mouseleave', this.hideMountPoints);
-    }
-  }
-
-  private showMountPoints = () => {
-    for (const circle of this.mountPointsCircles) {
-      circle.style.opacity = '1';
-    }
-  };
-
-  private hideMountPoints = () => {
-    for (const circle of this.mountPointsCircles) {
-      circle.style.opacity = '0';
-    }
-  };
 }

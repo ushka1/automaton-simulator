@@ -1,7 +1,11 @@
+import { StateView } from './StateView';
+
 export class TransitionView {
   private line: SVGLineElement;
-  private startCoords: { x: number; y: number } = { x: 0, y: 0 };
-  private endCoords: { x: number; y: number } = { x: 0, y: 0 };
+  private startStateView?: StateView;
+  private startMountPointIndex?: number;
+  private endStateView?: StateView;
+  private endMountPointIndex?: number;
 
   constructor() {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -10,24 +14,63 @@ export class TransitionView {
     this.line = line;
   }
 
-  setStartCoords(coords: { x: number; y: number }) {
-    this.startCoords = coords;
-    this.updateLine();
+  setStartStateView(stateView: StateView, mountPointIndex: number) {
+    this.unsetStartStateView();
+
+    this.startStateView = stateView;
+    this.startMountPointIndex = mountPointIndex;
+
+    this.updateStartListener(stateView.getAbsoluteMountPoints());
+    stateView.subscribe('mountpoints', this.updateStartListener);
   }
 
-  setEndCoords(coords: { x: number; y: number }) {
-    this.endCoords = coords;
-    this.updateLine();
+  unsetStartStateView() {
+    if (this.startStateView) {
+      this.startStateView.unsubscribe('mountpoints', this.updateStartListener);
+    }
+
+    this.startStateView = undefined;
+    this.startMountPointIndex = undefined;
   }
 
-  private updateLine() {
-    const { x: x1, y: y1 } = this.startCoords;
-    const { x: x2, y: y2 } = this.endCoords;
-    this.line.setAttribute('x1', x1 + '');
-    this.line.setAttribute('y1', y1 + '');
-    this.line.setAttribute('x2', x2 + '');
-    this.line.setAttribute('y2', y2 + '');
+  setEndStateView(stateView: StateView, mountPointIndex: number) {
+    this.unsetEndStateView();
+
+    this.endStateView = stateView;
+    this.endMountPointIndex = mountPointIndex;
+
+    this.updateEndListener(stateView.getAbsoluteMountPoints());
+    stateView.subscribe('mountpoints', this.updateEndListener);
   }
+
+  unsetEndStateView() {
+    if (this.endStateView) {
+      this.endStateView.unsubscribe('mountpoints', this.updateEndListener);
+    }
+
+    this.endStateView = undefined;
+    this.endMountPointIndex = undefined;
+  }
+
+  private updateStartListener = (mountPoints: { x: number; y: number }[]) => {
+    const coords = mountPoints[this.startMountPointIndex!];
+    this.updateStart(coords);
+  };
+
+  private updateEndListener = (mountPoints: { x: number; y: number }[]) => {
+    const coords = mountPoints[this.endMountPointIndex!];
+    this.updateEnd(coords);
+  };
+
+  updateStart = (coords: { x: number; y: number }) => {
+    this.line.setAttribute('x1', `${coords.x}`);
+    this.line.setAttribute('y1', `${coords.y}`);
+  };
+
+  updateEnd = (coords: { x: number; y: number }) => {
+    this.line.setAttribute('x2', `${coords.x}`);
+    this.line.setAttribute('y2', `${coords.y}`);
+  };
 
   getSvg(): SVGLineElement {
     return this.line;
