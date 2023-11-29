@@ -60,22 +60,26 @@ export class RenderOrchestrator {
 
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
     const transitionView = new TransitionView();
-    this.svg.appendChild(transitionView.getSvg());
+
     transitionView.setStartStateView(fromState, mountPointIndex);
     transitionView.updateEnd(
       fromState.getAbsoluteMountPoints()[mountPointIndex],
     );
+
+    this.svg.appendChild(transitionView.getSvg());
 
     const startNewTransitionMousemove = (e: MouseEvent) => {
       const x = e.clientX - this.svg.getBoundingClientRect().left;
       const y = e.clientY - this.svg.getBoundingClientRect().top;
       transitionView.updateEnd({ x, y });
     };
+    const startNewTransitionMouseup = () => {
+      document.removeEventListener('mousemove', startNewTransitionMousemove);
+      document.removeEventListener('mouseup', startNewTransitionMouseup);
+    };
 
     document.addEventListener('mousemove', startNewTransitionMousemove);
-    document.addEventListener('mouseup', () => {
-      document.removeEventListener('mousemove', startNewTransitionMousemove);
-    });
+    document.addEventListener('mouseup', startNewTransitionMouseup);
   };
 
   getSvg(): SVGSVGElement {
