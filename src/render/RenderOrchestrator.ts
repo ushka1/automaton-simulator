@@ -13,7 +13,13 @@ export class RenderOrchestrator {
   constructor(config: RenderOrchestratorConfig) {
     const { width, height } = config;
 
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const template = document.getElementById(
+      'as-svg-board',
+    ) as HTMLTemplateElement;
+    const svg = document
+      .importNode(template.content, true)
+      .querySelector('svg') as SVGSVGElement;
+
     svg.setAttribute('width', width + '');
     svg.setAttribute('height', height + '');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);

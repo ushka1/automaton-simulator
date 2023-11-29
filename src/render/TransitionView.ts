@@ -11,6 +11,7 @@ export class TransitionView {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.style.stroke = 'var(--blue)';
     line.style.strokeWidth = '5';
+    line.setAttribute('marker-end', 'url(#arrow)');
     this.line = line;
   }
 
@@ -76,32 +77,3 @@ export class TransitionView {
     return this.line;
   }
 }
-
-// <svg width="200" height="100">
-//   <defs>
-//     <defs>
-//       <marker
-//         id="circle"
-//         markerWidth="8"
-//         markerHeight="8"
-//         refX="4"
-//         refY="4"
-//         overflow="visible"
-//       >
-//         <text x="0" y="0" font-size="8px">1</text>
-//       </marker>
-//     </defs>
-//   </defs>
-
-//   <line
-//     x1="30"
-//     y1="50"
-//     x2="170"
-//     y2="50"
-//     stroke="black"
-//     stroke-width="2"
-//     marker-start="url(#circle)"
-//     marker-end="url(#circle)"
-//     marker-mid="url(#circle)"
-//   />
-// </svg>
