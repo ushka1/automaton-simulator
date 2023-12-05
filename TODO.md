@@ -2,7 +2,8 @@
 
 ## High Priority
 
-1. Implement line connecting states (transition).
+1. While creating new transition, observe state, and use `getClosestMountPoint`.
+   1. If same state, protect.
 
 ## Medium Priority
 

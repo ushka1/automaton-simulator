@@ -68,8 +68,9 @@ export class RenderOrchestrator {
     this.svg.appendChild(transitionView.getSvg());
 
     const startNewTransitionMousemove = (e: MouseEvent) => {
-      const x = e.clientX - this.svg.getBoundingClientRect().left;
-      const y = e.clientY - this.svg.getBoundingClientRect().top;
+      // TODO: parametrize 2.5
+      const x = e.clientX - this.svg.getBoundingClientRect().left - 2.5;
+      const y = e.clientY - this.svg.getBoundingClientRect().top - 2.5;
       transitionView.updateEnd({ x, y });
 
       const root = this.svg.getRootNode();
@@ -77,6 +78,7 @@ export class RenderOrchestrator {
         const elements = root.elementsFromPoint(e.clientX, e.clientY);
         const mountpoint = elements?.find((el) => el.id === 'mountpoint');
 
+        // FIXME: while starting new, automatically assigned to fromStateMountPoint
         if (mountpoint) {
           const stateName = mountpoint.getAttribute('data-state');
           const index = Number(mountpoint.getAttribute('data-index'));
