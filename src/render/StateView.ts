@@ -23,7 +23,7 @@ const defaultConfig: StateViewConfig = {
 
 export class StateView {
   private orchestrator: RenderOrchestrator;
-  private config: StateViewConfig;
+  config: StateViewConfig;
   private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private hover = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -250,6 +250,10 @@ export class StateView {
       mountPointElement.style.opacity = '0';
       mountPointElement.style.transition = 'opacity 0.025s linear';
       mountPointElement.style.cursor = 'pointer';
+
+      mountPointElement.id = 'mountpoint';
+      mountPointElement.setAttribute('data-state', this.config.name);
+      mountPointElement.setAttribute('data-index', i.toString());
 
       this.group.appendChild(mountPointElement);
       this.mountPointsCircles.push(mountPointElement);

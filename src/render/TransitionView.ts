@@ -11,6 +11,7 @@ export class TransitionView {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.style.stroke = 'var(--blue)';
     line.style.strokeWidth = '5';
+    line.style.pointerEvents = 'none';
     line.setAttribute('marker-end', 'url(#arrow)');
     this.line = line;
   }

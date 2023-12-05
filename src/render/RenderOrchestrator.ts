@@ -60,7 +60,6 @@ export class RenderOrchestrator {
 
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
     const transitionView = new TransitionView();
-
     transitionView.setStartStateView(fromState, mountPointIndex);
     transitionView.updateEnd(
       fromState.getAbsoluteMountPoints()[mountPointIndex],
@@ -72,7 +71,24 @@ export class RenderOrchestrator {
       const x = e.clientX - this.svg.getBoundingClientRect().left;
       const y = e.clientY - this.svg.getBoundingClientRect().top;
       transitionView.updateEnd({ x, y });
+
+      const root = this.svg.getRootNode();
+      if (root instanceof ShadowRoot || root instanceof Document) {
+        const elements = root.elementsFromPoint(e.clientX, e.clientY);
+        const mountpoint = elements?.find((el) => el.id === 'mountpoint');
+
+        if (mountpoint) {
+          const stateName = mountpoint.getAttribute('data-state');
+          const index = Number(mountpoint.getAttribute('data-index'));
+
+          const state = this.states.find((s) => s.config.name === stateName);
+          if (state) {
+            transitionView.setEndStateView(state, index);
+          }
+        }
+      }
     };
+
     const startNewTransitionMouseup = () => {
       document.removeEventListener('mousemove', startNewTransitionMousemove);
       document.removeEventListener('mouseup', startNewTransitionMouseup);
