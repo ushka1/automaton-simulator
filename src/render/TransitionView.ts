@@ -15,9 +15,28 @@ export class TransitionView {
     path.style.fill = 'none';
     path.setAttribute('marker-end', 'url(#arrow)');
     this.path = path;
+
+    path.addEventListener('contextmenu', this.contextMenuListener);
   }
 
-  // ========================= OBSERVE STATES =========================
+  getSvg(): SVGPathElement {
+    return this.path;
+  }
+
+  /**
+   * Bring the path to the front when right-clicked.
+   */
+  private contextMenuListener = (e: MouseEvent) => {
+    // TODO: after transition is connected, pointer events should be enabled
+    e.preventDefault();
+
+    console.log('OK');
+
+    const parent = this.path.parentNode!;
+    parent.appendChild(this.path);
+  };
+
+  /* ========================= STATES CONNECTION ========================= */
 
   setStartStateView(stateView: StateView, mountPointIndex: number) {
     this.unsetStartStateView();
@@ -57,81 +76,49 @@ export class TransitionView {
     this.endMountPointIndex = undefined;
   }
 
-  private updateStartListener = (mountPoints: { x: number; y: number }[]) => {
+  private updateStartListener = (mountPoints: Coords[]) => {
     const coords = mountPoints[this.startMountPointIndex!];
     this.updateStart(coords);
   };
 
-  private updateEndListener = (mountPoints: { x: number; y: number }[]) => {
+  private updateEndListener = (mountPoints: Coords[]) => {
     const coords = mountPoints[this.endMountPointIndex!];
     this.updateEnd(coords);
   };
 
   /* ========================= UPDATE PATH ========================= */
 
-  updateStart = (coords: { x: number; y: number }) => {
-    const endCoords = this.getEndCoords();
-    const pathData = this.getPathData(coords, endCoords);
-    this.path.setAttribute('d', pathData);
+  private startCoords: Coords = { x: 0, y: 0 };
+  private endCoords: Coords = { x: 0, y: 0 };
+  private curvatureOffset: number = 0;
+
+  updateStart = (coords: Coords) => {
+    this.startCoords = coords;
+    this.updatePathData();
   };
 
-  updateEnd = (coords: { x: number; y: number }) => {
-    const startCoords = this.getStartCoords();
-    const pathData = this.getPathData(startCoords, coords);
-    this.path.setAttribute('d', pathData);
+  updateEnd = (coords: Coords) => {
+    this.endCoords = coords;
+    this.updatePathData();
   };
 
-  private getStartCoords(): { x: number; y: number } {
-    const pathSegments = this.path.getAttribute('d')?.split(' ') || [];
-    const x = parseFloat(pathSegments[0].substring(1));
-    const y = parseFloat(pathSegments[1]);
+  private getControlCoords(): Coords {
+    const { x: x1, y: y1 } = this.startCoords;
+    const { x: x2, y: y2 } = this.endCoords;
+    const cx = (x1 + x2) / 2;
+    const cy = (y1 + y2) / 2 - this.curvatureOffset;
 
-    if (!isNaN(x) && !isNaN(y)) {
-      return { x, y };
-    } else {
-      return { x: 0, y: 0 };
-    }
+    return { x: cx, y: cy };
   }
 
-  private getEndCoords(): { x: number; y: number } {
-    const pathSegments = this.path.getAttribute('d')?.split(' ') || [];
-    const x = parseFloat(pathSegments[4]);
-    const y = parseFloat(pathSegments[5]);
+  private updatePathData() {
+    const { x: x1, y: y1 } = this.startCoords;
+    const { x: x2, y: y2 } = this.endCoords;
+    const { x: cx, y: cy } = this.getControlCoords();
 
-    if (!isNaN(x) && !isNaN(y)) {
-      return { x, y };
-    } else {
-      return { x: 0, y: 0 };
-    }
-  }
+    const pathData =
+      'M' + x1 + ' ' + y1 + ' Q' + cx + ' ' + cy + ' ' + x2 + ' ' + y2;
 
-  private getPathData(
-    startCoords: { x: number; y: number },
-    endCoords: { x: number; y: number },
-  ): string {
-    const curvatureOffset = 0;
-    const controlX = (startCoords.x + endCoords.x) / 2;
-    const controlY = (startCoords.y + endCoords.y) / 2 - curvatureOffset;
-
-    return (
-      'M' +
-      startCoords.x +
-      ' ' +
-      startCoords.y +
-      ' Q' +
-      controlX +
-      ' ' +
-      controlY +
-      ' ' +
-      endCoords.x +
-      ' ' +
-      endCoords.y
-    );
-  }
-
-  /* ========================= UTILS ========================= */
-
-  getSvg(): SVGPathElement {
-    return this.path;
+    this.path.setAttribute('d', pathData);
   }
 }

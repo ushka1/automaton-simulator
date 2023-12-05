@@ -83,17 +83,7 @@ export class StateView {
     this.renderMountPoints();
 
     this.group.addEventListener('mousedown', this.mouseDownListener);
-    this.group.addEventListener('contextmenu', this.bringElementToTop);
-  }
-
-  getCenterCoords() {
-    const { gx, gy } = this.getGroupCoords();
-    const { r, hm } = this.config;
-
-    const x = gx + r + hm;
-    const y = gy + r + hm;
-
-    return { x, y };
+    this.group.addEventListener('contextmenu', this.contextMenuListener);
   }
 
   getSvg() {
@@ -147,7 +137,7 @@ export class StateView {
       if (y > max_y - 2 * r - hm) y = max_y - 2 * r - hm;
     }
 
-    this.updatePosition(x, y);
+    this.updatePosition({ x, y });
   };
 
   private mouseUpListener = () => {
@@ -155,12 +145,15 @@ export class StateView {
     document.removeEventListener('mouseup', this.mouseUpListener);
   };
 
-  private updatePosition(x: number, y: number) {
-    this.group.setAttribute('transform', `translate(${x}, ${y})`);
+  private updatePosition(coords: Coords) {
+    this.group.setAttribute('transform', `translate(${coords.x}, ${coords.y})`);
     this.publishMountPointsUpdate();
   }
 
-  private bringElementToTop = (e: MouseEvent) => {
+  /**
+   * Bring the group to the front when right-clicked.
+   */
+  private contextMenuListener = (e: MouseEvent) => {
     e.preventDefault();
 
     const parent = this.group.parentNode!;
@@ -170,7 +163,7 @@ export class StateView {
   /* ========================= MOUNT POINTS ========================= */
 
   private eventPublisher = new EventPublisher<{
-    mountpoints: [mountPoints: { x: number; y: number }[]];
+    mountpoints: [mountPoints: Coords[]];
   }>();
 
   get subscribe() {
@@ -184,10 +177,10 @@ export class StateView {
   /**
    * Use parametric equations for a circle to get the relative mount points coordinates.
    */
-  private getRelativeMountPoints(): { x: number; y: number }[] {
+  private getRelativeMountPoints(): Coords[] {
     const { r, mountPointsNumber } = this.config;
 
-    const points: { x: number; y: number }[] = [];
+    const points: Coords[] = [];
 
     const cx = this.circle.cx.baseVal.value;
     const cy = this.circle.cy.baseVal.value;
@@ -208,7 +201,7 @@ export class StateView {
   /**
    * Use parametric equations for a circle to get the absolute mount points coordinates.
    */
-  getAbsoluteMountPoints(): { x: number; y: number }[] {
+  getAbsoluteMountPoints(): Coords[] {
     const matrix = this.group.getCTM()!;
     const gx = matrix.e;
     const gy = matrix.f;
@@ -282,7 +275,17 @@ export class StateView {
 
   /* ========================= MOUNT POINTS UTILS ========================= */
 
-  getClosestMountPointIndex(coords: { x: number; y: number }) {
+  getCenterCoords(): Coords {
+    const { r, hm } = this.config;
+    const { gx, gy } = this.getGroupCoords();
+
+    return {
+      x: gx + r + hm,
+      y: gy + r + hm,
+    };
+  }
+
+  getClosestMountPointIndex(coords: Coords) {
     const { x, y } = coords;
     const mountPoints = this.getAbsoluteMountPoints();
 
