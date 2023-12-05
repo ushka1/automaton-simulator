@@ -2,7 +2,13 @@
 
 ## High Priority
 
-1. While creating new transition, observe state, and use `getClosestMountPoint`.
+1. Transition:
+   - change mountPoints
+   - change state
+   - change curvature
+   - add label
+   - change label
+1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
    1. If same state, protect.
 
 ## Medium Priority
