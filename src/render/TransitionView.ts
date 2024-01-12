@@ -1,42 +1,57 @@
 import { StateView } from './StateView';
 
 export class TransitionView {
-  private path: SVGPathElement;
+  private path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  // private hover = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
   private startStateView?: StateView;
   private startMountPointIndex?: number;
   private endStateView?: StateView;
   private endMountPointIndex?: number;
+  private inMotion: boolean;
 
-  constructor() {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.style.stroke = 'var(--blue)';
-    path.style.strokeWidth = '5';
-    // path.style.pointerEvents = 'none';
-    path.style.fill = 'none';
-    path.setAttribute('marker-end', 'url(#arrow)');
-    this.path = path;
+  constructor(inMotion = false) {
+    this.path.style.fill = 'none';
+    this.path.style.stroke = 'var(--blue)';
+    this.path.style.strokeWidth = '5';
+    this.path.style.pointerEvents = 'none';
+    this.path.setAttribute('marker-end', 'url(#arrow)');
 
-    path.addEventListener('contextmenu', this.contextMenuListener);
+    // this.hover.style.fill = 'none';
+    // this.hover.style.stroke = 'var(--blue)';
+    // this.hover.style.strokeWidth = '20';
 
-    // FIXME: activate after transition is connected
-    // path.addEventListener('mouseover', this.renderControls);
-    // path.addEventListener('mouseout', this.removeControls);
-  }
+    this.path.addEventListener('contextmenu', this.contextMenuListener);
 
-  getSvg(): SVGPathElement {
-    return this.path;
+    this.setInMotion(inMotion);
   }
 
   /**
    * Bring the path to the front when right-clicked.
    */
   private contextMenuListener = (e: MouseEvent) => {
-    // TODO: after transition is connected, pointer events should be enabled
     e.preventDefault();
 
     const parent = this.path.parentNode!;
     parent.appendChild(this.path);
   };
+
+  setInMotion(inMotion: boolean) {
+    this.inMotion = inMotion;
+
+    if (inMotion) {
+      this.path.removeEventListener('mouseover', this.renderControls);
+      this.path.removeEventListener('mouseout', this.removeControls);
+    } else {
+      this.path.style.pointerEvents = 'auto';
+      this.path.addEventListener('mouseover', this.renderControls);
+      this.path.addEventListener('mouseout', this.removeControls);
+    }
+  }
+
+  getSvg(): SVGPathElement {
+    return this.path;
+  }
 
   /* ========================= STATES CONNECTION ========================= */
 
@@ -177,14 +192,8 @@ export class TransitionView {
   };
 
   private removeControls = () => {
-    if (this.startCircle) {
-      this.startCircle.remove();
-    }
-    if (this.endCircle) {
-      this.endCircle.remove();
-    }
-    if (this.centerCircle) {
-      this.centerCircle.remove();
-    }
+    this.startCircle?.remove();
+    this.endCircle?.remove();
+    this.centerCircle?.remove();
   };
 }

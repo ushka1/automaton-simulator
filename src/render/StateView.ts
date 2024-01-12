@@ -23,7 +23,8 @@ const defaultConfig: StateViewConfig = {
 
 export class StateView {
   private orchestrator: RenderOrchestrator;
-  config: StateViewConfig;
+  private config: StateViewConfig;
+
   private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   private hover = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -45,23 +46,28 @@ export class StateView {
       ...config,
     };
 
-    const { x, y, r, hm, name } = this.config;
+    this.initHover();
+    this.initCircle();
+    this.initText();
+    this.initGroup();
+    this.renderMountPoints();
 
-    // Set the hover circle attributes
+    this.group.addEventListener('mousedown', this.mouseDownListener);
+    this.group.addEventListener('contextmenu', this.contextMenuListener);
+  }
+
+  private initHover() {
+    const { r, hm } = this.config;
+
     this.hover.setAttribute('cx', r + hm + '');
     this.hover.setAttribute('cy', r + hm + '');
     this.hover.setAttribute('r', r + hm + '');
     this.hover.style.fill = 'transparent';
+  }
 
-    // Set the circle attributes
-    this.circle.setAttribute('cx', r + hm + '');
-    this.circle.setAttribute('cy', r + hm + '');
-    this.circle.setAttribute('r', r + '');
-    this.circle.style.fill = 'var(--charcoal)';
-    this.circle.style.stroke = 'var(--blue)';
-    this.circle.style.strokeWidth = '5';
+  private initText() {
+    const { r, hm, name } = this.config;
 
-    // Set the text attributes
     this.text.setAttribute('x', r + hm + '');
     this.text.setAttribute('y', r + hm + '');
     this.text.style.fill = 'var(--bone)';
@@ -70,20 +76,31 @@ export class StateView {
     this.text.style.dominantBaseline = 'central';
     this.text.style.fontSize = '1.2rem';
     this.text.textContent = name;
+  }
 
-    // Set the group attributes
+  private initCircle() {
+    const { r, hm } = this.config;
+
+    this.circle.setAttribute('cx', r + hm + '');
+    this.circle.setAttribute('cy', r + hm + '');
+    this.circle.setAttribute('r', r + '');
+    this.circle.style.fill = 'var(--charcoal)';
+    this.circle.style.stroke = 'var(--blue)';
+    this.circle.style.strokeWidth = '5';
+  }
+
+  private initGroup() {
+    const { x, y, hm } = this.config;
+
     this.group.style.cursor = 'move';
-
-    // Append the circle and text elements to the group
+    this.group.setAttribute('transform', `translate(${x - hm}, ${y - hm})`);
     this.group.appendChild(this.hover);
     this.group.appendChild(this.circle);
     this.group.appendChild(this.text);
-    this.group.setAttribute('transform', `translate(${x - hm}, ${y - hm})`);
+  }
 
-    this.renderMountPoints();
-
-    this.group.addEventListener('mousedown', this.mouseDownListener);
-    this.group.addEventListener('contextmenu', this.contextMenuListener);
+  getName() {
+    return this.config.name;
   }
 
   getSvg() {

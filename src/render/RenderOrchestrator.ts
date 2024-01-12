@@ -59,7 +59,7 @@ export class RenderOrchestrator {
   /* ========================= TRANSITIONS ========================= */
 
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
-    const transitionView = new TransitionView();
+    const transitionView = new TransitionView(true);
     transitionView.setStartStateView(fromState, mountPointIndex);
     transitionView.updateEnd(
       fromState.getAbsoluteMountPoints()[mountPointIndex],
@@ -83,7 +83,7 @@ export class RenderOrchestrator {
           const stateName = mountpoint.getAttribute('data-state');
           const index = Number(mountpoint.getAttribute('data-index'));
 
-          const state = this.states.find((s) => s.config.name === stateName);
+          const state = this.states.find((s) => s.getName() === stateName);
           if (state) {
             transitionView.setEndStateView(state, index);
           }
@@ -92,6 +92,7 @@ export class RenderOrchestrator {
     };
 
     const startNewTransitionMouseup = () => {
+      transitionView.setInMotion(false);
       document.removeEventListener('mousemove', startNewTransitionMousemove);
       document.removeEventListener('mouseup', startNewTransitionMouseup);
     };
