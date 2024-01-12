@@ -1,29 +1,85 @@
+import { RenderOrchestrator } from './RenderOrchestrator';
 import { StateView } from './StateView';
 
-export class TransitionView {
-  private path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  // private hover = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+export type TransitionViewConfig = {
+  inMotion: boolean;
+};
 
+const defaultConfig: TransitionViewConfig = {
+  inMotion: false,
+};
+
+export class TransitionView {
+  private orchestrator: RenderOrchestrator;
   private startStateView?: StateView;
   private startMountPointIndex?: number;
   private endStateView?: StateView;
   private endMountPointIndex?: number;
-  private inMotion: boolean;
+  private config: TransitionViewConfig;
 
-  constructor(inMotion = false) {
+  private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  private hover = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'path',
+  );
+  private path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+  constructor(
+    orchestrator: RenderOrchestrator,
+    config: Partial<TransitionViewConfig> = {},
+  ) {
+    this.orchestrator = orchestrator;
+    this.config = {
+      ...defaultConfig,
+      ...config,
+    };
+
+    this.initPath();
+    this.initHover();
+    this.initGroup();
+    this.initControls();
+
+    this.group.addEventListener('contextmenu', this.contextMenuListener);
+    this.setInMotion(this.config.inMotion);
+  }
+
+  private initPath() {
     this.path.style.fill = 'none';
     this.path.style.stroke = 'var(--blue)';
     this.path.style.strokeWidth = '5';
     this.path.style.pointerEvents = 'none';
     this.path.setAttribute('marker-end', 'url(#arrow)');
+  }
 
-    // this.hover.style.fill = 'none';
-    // this.hover.style.stroke = 'var(--blue)';
-    // this.hover.style.strokeWidth = '20';
+  private initHover() {
+    this.hover.style.fill = 'none';
+    this.hover.style.stroke = 'transparent';
+    this.hover.style.strokeWidth = '10';
+    this.hover.style.pointerEvents = 'none';
+  }
 
-    this.path.addEventListener('contextmenu', this.contextMenuListener);
+  private initGroup() {
+    this.group.appendChild(this.hover);
+    this.group.appendChild(this.path);
+  }
 
-    this.setInMotion(inMotion);
+  getSvg(): SVGElement {
+    return this.group;
+  }
+
+  /* ========================= Listeners ========================= */
+
+  setInMotion(inMotion: boolean) {
+    this.config.inMotion = inMotion;
+
+    if (inMotion) {
+      this.group.removeEventListener('mouseenter', this.renderControls);
+      this.group.removeEventListener('mouseleave', this.removeControls);
+    } else {
+      this.hover.style.pointerEvents = 'auto';
+      this.group.addEventListener('mouseenter', this.renderControls);
+      this.group.addEventListener('mouseleave', this.removeControls);
+    }
   }
 
   /**
@@ -35,23 +91,6 @@ export class TransitionView {
     const parent = this.path.parentNode!;
     parent.appendChild(this.path);
   };
-
-  setInMotion(inMotion: boolean) {
-    this.inMotion = inMotion;
-
-    if (inMotion) {
-      this.path.removeEventListener('mouseover', this.renderControls);
-      this.path.removeEventListener('mouseout', this.removeControls);
-    } else {
-      this.path.style.pointerEvents = 'auto';
-      this.path.addEventListener('mouseover', this.renderControls);
-      this.path.addEventListener('mouseout', this.removeControls);
-    }
-  }
-
-  getSvg(): SVGPathElement {
-    return this.path;
-  }
 
   /* ========================= STATES CONNECTION ========================= */
 
@@ -107,7 +146,7 @@ export class TransitionView {
 
   private startCoords: Coords = { x: 0, y: 0 };
   private endCoords: Coords = { x: 0, y: 0 };
-  private curvatureOffset: number = 50;
+  private curvatureOffset = 0;
 
   updateStart = (coords: Coords) => {
     this.startCoords = coords;
@@ -137,63 +176,88 @@ export class TransitionView {
       'M' + x1 + ' ' + y1 + ' Q' + cx + ' ' + cy + ' ' + x2 + ' ' + y2;
 
     this.path.setAttribute('d', pathData);
+    this.hover.setAttribute('d', pathData);
   }
 
   /* ========================= CONTROLS ========================= */
 
-  private startCircle?: SVGCircleElement;
-  private endCircle?: SVGCircleElement;
-  private centerCircle?: SVGCircleElement;
+  private startCircle = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'circle',
+  );
+  private endCircle = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'circle',
+  );
+  private centerCircle = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'circle',
+  );
+
+  private initControls() {
+    this.startCircle.setAttribute('r', '5');
+    this.startCircle.style.fill = 'var(--bone-dark)';
+    this.startCircle.style.pointerEvents = 'auto';
+    this.startCircle.style.cursor = 'pointer';
+
+    this.endCircle.setAttribute('r', '5');
+    this.endCircle.style.fill = 'var(--bone-dark)';
+    this.endCircle.style.pointerEvents = 'auto';
+    this.endCircle.style.cursor = 'pointer';
+
+    this.centerCircle.setAttribute('r', '5');
+    this.centerCircle.style.fill = 'var(--bone-dark)';
+    this.centerCircle.style.pointerEvents = 'auto';
+    this.centerCircle.style.cursor = 'pointer';
+
+    this.centerCircle.addEventListener('mousedown', this.onStartCurvature);
+  }
 
   private renderControls = () => {
-    const startCircle = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'circle',
-    );
-    startCircle.setAttribute('r', '5');
-    startCircle.style.fill = 'var(--charcoal-dark)';
-    startCircle.style.pointerEvents = 'auto';
-    startCircle.style.cursor = 'pointer';
-    startCircle.setAttribute('cx', this.startCoords.x + '');
-    startCircle.setAttribute('cy', this.startCoords.y + '');
-    this.startCircle = startCircle;
+    this.startCircle.setAttribute('cx', this.startCoords.x + '');
+    this.startCircle.setAttribute('cy', this.startCoords.y + '');
+    this.group.appendChild(this.startCircle);
 
-    const endCircle = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'circle',
-    );
-    endCircle.setAttribute('r', '5');
-    endCircle.style.fill = 'var(--charcoal-dark)';
-    endCircle.style.pointerEvents = 'auto';
-    endCircle.style.cursor = 'pointer';
-    endCircle.setAttribute('cx', this.endCoords.x + '');
-    endCircle.setAttribute('cy', this.endCoords.y + '');
-    this.endCircle = endCircle;
+    this.endCircle.setAttribute('cx', this.endCoords.x + '');
+    this.endCircle.setAttribute('cy', this.endCoords.y + '');
+    this.group.appendChild(this.endCircle);
 
-    const centerCircle = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'circle',
-    );
-    centerCircle.setAttribute('r', '5');
-    centerCircle.style.fill = 'var(--charcoal-dark)';
-    centerCircle.style.pointerEvents = 'auto';
-    centerCircle.style.cursor = 'pointer';
-    centerCircle.setAttribute('cx', this.getControlCoords().x + '');
-    centerCircle.setAttribute(
+    this.centerCircle.setAttribute('cx', this.getControlCoords().x + '');
+    this.centerCircle.setAttribute(
       'cy',
       this.getControlCoords().y + this.curvatureOffset / 2 + '',
     );
-    this.centerCircle = centerCircle;
-
-    const parent = this.path.parentNode!;
-    parent.appendChild(startCircle);
-    parent.appendChild(endCircle);
-    parent.appendChild(centerCircle);
+    this.group.appendChild(this.centerCircle);
   };
 
   private removeControls = () => {
     this.startCircle?.remove();
     this.endCircle?.remove();
     this.centerCircle?.remove();
+  };
+
+  /* ========================= CONTROLS - CURVATURE ========================= */
+
+  private curvatureInitY: number = 0;
+
+  private onStartCurvature = () => {
+    this.hover.style.pointerEvents = 'none';
+    this.curvatureInitY = (this.startCoords.y + this.endCoords.y) / 2;
+
+    document.addEventListener('mousemove', this.onChangeCurvature);
+    document.addEventListener('mouseup', this.onEndCurvature);
+  };
+
+  private onChangeCurvature = (e: MouseEvent) => {
+    const point = this.orchestrator.coordsToPoint(e);
+    const dy = Math.floor(this.curvatureInitY - point.y) * 2;
+    this.curvatureOffset = dy;
+    this.updatePathData();
+  };
+
+  private onEndCurvature = () => {
+    this.hover.style.pointerEvents = 'auto';
+    document.removeEventListener('mousemove', this.onChangeCurvature);
+    document.removeEventListener('mouseup', this.onEndCurvature);
   };
 }

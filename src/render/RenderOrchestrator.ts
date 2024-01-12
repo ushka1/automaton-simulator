@@ -49,7 +49,7 @@ export class RenderOrchestrator {
   }
 
   addTransition(stateView1: StateView, stateView2: StateView): void {
-    const transitionView = new TransitionView();
+    const transitionView = new TransitionView(this);
     transitionView.setStartStateView(stateView1, 0);
     transitionView.setEndStateView(stateView2, 6);
 
@@ -58,8 +58,15 @@ export class RenderOrchestrator {
 
   /* ========================= TRANSITIONS ========================= */
 
+  coordsToPoint = (coords: Coords): Coords => {
+    return {
+      x: coords.x - this.svg.getBoundingClientRect().left,
+      y: coords.y - this.svg.getBoundingClientRect().top,
+    };
+  };
+
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
-    const transitionView = new TransitionView(true);
+    const transitionView = new TransitionView(this, { inMotion: true });
     transitionView.setStartStateView(fromState, mountPointIndex);
     transitionView.updateEnd(
       fromState.getAbsoluteMountPoints()[mountPointIndex],
@@ -68,9 +75,9 @@ export class RenderOrchestrator {
     this.svg.appendChild(transitionView.getSvg());
 
     const startNewTransitionMousemove = (e: MouseEvent) => {
-      // TODO: parametrize 2.5
-      const x = e.clientX - this.svg.getBoundingClientRect().left - 2.5;
-      const y = e.clientY - this.svg.getBoundingClientRect().top - 2.5;
+      const point = this.coordsToPoint(e);
+      const x = point.x - 2.5; // TODO: parametrize 2.5
+      const y = point.y - 2.5; // TODO: parametrize 2.5
       transitionView.updateEnd({ x, y });
 
       const root = this.svg.getRootNode();
