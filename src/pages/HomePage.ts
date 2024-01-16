@@ -37,7 +37,8 @@ class HomePage extends HTMLElement {
       const q2 = renderOrchestrator.addStateFromConfig({
         name: 'Q2',
         x: Math.round(((2 * width) / 3 - 35) / 10) * 10,
-        y: Math.round((height / 2 - 35) / 10) * 10,
+        // y: Math.round((height / 2 - 35) / 10) * 10,
+        y: Math.round(((1.5 * height) / 2 - 35) / 10) * 10,
       });
 
       renderOrchestrator.addTransition(q1, q2);

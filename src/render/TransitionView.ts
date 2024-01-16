@@ -161,8 +161,28 @@ export class TransitionView {
   private getControlCoords(): Coords {
     const { x: x1, y: y1 } = this.startCoords;
     const { x: x2, y: y2 } = this.endCoords;
+
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2 - this.curvatureOffset;
+
+    // f(x) = ax + b
+    const a = (y2 - y1) / (x2 - x1);
+    const b = y1 - a * x1;
+
+    // f(x) = ex + f
+
+    // f(x_1) = e*x_1 + f
+    // f(x_1) = y_1
+    // y_1 = e*x_1 + f
+    // f = y_1 - e*x_1
+    const e = -1 / a;
+    const f = cy - e * cx;
+
+    const E = e;
+    const F = -1;
+    const G = f;
+
+    // base vector = []
 
     return { x: cx, y: cy };
   }

@@ -11,6 +11,9 @@
 1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
    1. If same state, protect.
 
+1. Why orchestrator?
+Selected, Reaction between selected <-> other, State
+
 ## Medium Priority
 
 1. Implement separated architecture (view and behavior).
