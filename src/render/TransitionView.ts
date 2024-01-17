@@ -144,7 +144,7 @@ export class TransitionView {
 
   private startCoords: Coords = { x: 0, y: 0 };
   private endCoords: Coords = { x: 0, y: 0 };
-  private controlDist = 50;
+  private controlDistance = 50;
 
   updateStart = (coords: Coords) => {
     this.startCoords = coords;
@@ -207,7 +207,7 @@ export class TransitionView {
       gEigenvector = gVector.map((x) => x / gVectorLength);
     }
 
-    const moveVector = gEigenvector.map((x) => x * this.controlDist);
+    const moveVector = gEigenvector.map((x) => x * this.controlDistance);
 
     return {
       pathX: cx + moveVector[0] * 2,
@@ -293,21 +293,44 @@ export class TransitionView {
   };
 
   private onChangeCurvature = (e: MouseEvent) => {
-    const { x: sx, y: sy } = this.startCoords;
-    const { x: ex, y: ey } = this.endCoords;
+    const { x: mx, y: my } = this.orchestrator.coordsToPoint(e); // mouse x, mouse y
+    let { x: sx, y: sy } = this.startCoords; // start x, start y
+    let { x: ex, y: ey } = this.endCoords; // end x, end y
+    const reversed = sx > ex || (sx == ex && sy > ex); // determine whether line is reversed
 
-    // FIXME: these calculations
+    // swap start and end if
+    // point order is reversed <=> line is reversed
+    if (reversed) {
+      [sx, ex] = [ex, sx];
+      [sy, ey] = [ey, sy];
+    }
+
     // f(x) = ax + b
+    // line between start and end points
     const a = (ey - sy) / (ex - sx);
     const b = sy - a * sx;
     const f = (x: number) => a * x + b;
 
-    const { x: mx, y: my } = this.orchestrator.coordsToPoint(e); // mouse x, mouse y
-    // const sign = Math.sign(f(mx) - my);
-    const sign = Math.sign(f(mx) - my) * -1;
-    const dist = Math.abs(a * mx + -1 * my + b) / Math.sqrt(a ** 2 + (-1) ** 2);
+    let adfl: number; // absolute distance from line
+    if (a == 0) {
+      adfl = Math.abs(my - sy);
+    } else if (!isFinite(a)) {
+      adfl = Math.abs(mx - sx);
+    } else {
+      adfl = Math.abs(a * mx + -1 * my + b) / Math.sqrt(a ** 2 + (-1) ** 2);
+    }
 
-    this.controlDist = dist * sign;
+    let sign: number;
+    if (!isFinite(a)) {
+      sign = Math.sign(mx - sx);
+    } else {
+      sign = Math.sign(f(mx) - my); // determine whether mouse is above or below line
+    }
+    sign *= -1; // invert sign because y axis is inverted
+    sign *= reversed ? -1 : 1; // invert sign if line is reversed
+
+    const rdfl = adfl * sign; // relative distance from line
+    this.controlDistance = rdfl;
     this.updatePathData();
   };
 

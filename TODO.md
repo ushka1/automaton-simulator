@@ -2,17 +2,16 @@
 
 ## High Priority
 
-1. Transition curvature improvement.
-    - `a == 0` bug
-    - sign in distance fix
-    - alternative calc approach (?)
-    - write docs
 1. Transition change mount point/state.
 1. Control inverse to orchestrator.
     - Why? Selected, reaction between selected <-> other, State, etc.
 
 ## Medium Priority
 
+1. Transition curvature improvement.
+    - alternative calc approach (?)
+    - write docs
+    - same point connection
 1. Transition set label.
 1. State set label.
 
