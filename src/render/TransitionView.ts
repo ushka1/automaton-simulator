@@ -60,6 +60,10 @@ export class TransitionView {
 
   /* ========================= UTILS ========================= */
 
+  getStrokeWidth() {
+    return +this.path.style.strokeWidth;
+  }
+
   setInMotion(inMotion: boolean) {
     inMotion ? this.disableListeners() : this.enableListeners();
     this.config.inMotion = inMotion;

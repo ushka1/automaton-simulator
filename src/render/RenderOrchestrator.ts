@@ -9,9 +9,14 @@ type RenderOrchestratorConfig = {
   height: number;
 };
 
-type ListenerEnablerPayload<T> = {
-  excluded?: T[];
-  included?: T[];
+type Listenable = {
+  enableListeners(): void;
+  disableListeners(): void;
+};
+
+type ListenableFilter = {
+  excluded?: Listenable[];
+  included?: Listenable[];
 };
 
 export class RenderOrchestrator implements ParentOrchestrator {
@@ -76,18 +81,19 @@ export class RenderOrchestrator implements ParentOrchestrator {
   /* ========================= TRANSITIONS ========================= */
 
   startStateMoving(stateView: StateView): void {
-    this.disableStateListeners({ excluded: [stateView] });
-    this.disableTransitionListeners();
+    this.disableListeners(this.states, { excluded: [stateView] });
+    this.disableListeners(this.transitions);
   }
 
   endStateMoving(): void {
-    this.enableStateListeners();
-    this.enableTransitionListeners();
+    this.enableListeners(this.states);
+    this.enableListeners(this.transitions);
   }
 
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
-    this.disableTransitionListeners();
+    this.disableListeners(this.transitions);
 
+    // TODO: Think about this inMotion, is it neccessary if orchestrator controls it?
     const transitionView = new TransitionView(this, { inMotion: true });
     transitionView.setStartState(fromState, mountPointIndex);
     transitionView.updateEnd(
@@ -99,8 +105,10 @@ export class RenderOrchestrator implements ParentOrchestrator {
 
     const handleNewTransition = (e: MouseEvent) => {
       const point = this.coordsToPoint(e);
-      const x = point.x - 2.5; // TODO: parametrize 2.5
-      const y = point.y - 2.5; // TODO: parametrize 2.5
+
+      const strokeWidth = transitionView.getStrokeWidth();
+      const x = point.x - strokeWidth / 2;
+      const y = point.y - strokeWidth / 2;
       transitionView.updateEnd({ x: x, y: y });
 
       const root = this.svgRoot.getRootNode();
@@ -123,7 +131,7 @@ export class RenderOrchestrator implements ParentOrchestrator {
 
     const endNewTransition = () => {
       transitionView.setInMotion(false);
-      this.enableTransitionListeners();
+      this.enableListeners(this.transitions);
 
       document.removeEventListener('mousemove', handleNewTransition);
       document.removeEventListener('mouseup', endNewTransition);
@@ -135,76 +143,48 @@ export class RenderOrchestrator implements ParentOrchestrator {
 
   /* ========================= LISTENERS ========================= */
 
-  // TODO: Refactor because too much code duplication
+  private enableListeners(
+    listenables: Listenable[],
+    { excluded, included }: ListenableFilter = {},
+  ) {
+    this.switchListeners(true, listenables, { excluded, included });
+  }
 
-  private enableStateListeners({
-    excluded,
-    included,
-  }: ListenerEnablerPayload<StateView> = {}) {
-    if (included && included.length > 0) {
-      for (const state of included) {
-        state.enableListeners();
+  private disableListeners(
+    listenables: Listenable[],
+    { excluded, included }: ListenableFilter = {},
+  ) {
+    this.switchListeners(false, listenables, { excluded, included });
+  }
+
+  private switchListeners(
+    enable: boolean,
+    listenables: Listenable[],
+    { excluded, included }: ListenableFilter = {},
+  ) {
+    excluded ??= [];
+    included ??= [];
+
+    if (included.length > 0) {
+      for (const l of included) {
+        if (enable) {
+          l.enableListeners();
+        } else {
+          l.disableListeners();
+        }
       }
     } else {
-      for (const state of this.states) {
-        if (!excluded?.includes(state)) {
-          state.enableListeners();
+      for (const l of listenables) {
+        if (!excluded.includes(l)) {
+          if (enable) {
+            l.enableListeners();
+          } else {
+            l.disableListeners();
+          }
         }
       }
     }
   }
-
-  private disableStateListeners({
-    excluded,
-    included,
-  }: ListenerEnablerPayload<StateView> = {}) {
-    if (included && included.length > 0) {
-      for (const state of included) {
-        state.disableListeners();
-      }
-    } else {
-      for (const state of this.states) {
-        if (!excluded?.includes(state)) {
-          state.disableListeners();
-        }
-      }
-    }
-  }
-
-  private enableTransitionListeners({
-    excluded,
-    included,
-  }: ListenerEnablerPayload<TransitionView> = {}) {
-    if (included && included.length > 0) {
-      for (const transition of included) {
-        transition.enableListeners();
-      }
-    } else {
-      for (const transition of this.transitions) {
-        if (!excluded?.includes(transition)) {
-          transition.enableListeners();
-        }
-      }
-    }
-  }
-
-  private disableTransitionListeners({
-    excluded,
-    included,
-  }: ListenerEnablerPayload<TransitionView> = {}) {
-    if (included && included.length > 0) {
-      for (const transition of included) {
-        transition.disableListeners();
-      }
-    } else {
-      for (const transition of this.transitions) {
-        if (!excluded?.includes(transition)) {
-          transition.disableListeners();
-        }
-      }
-    }
-  }
-
   /* ========================= UTILS ========================= */
 
   coordsToPoint = (coords: Point): Point => {

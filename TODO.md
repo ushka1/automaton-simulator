@@ -2,11 +2,10 @@
 
 ## High Priority
 
-1. Control inverse to orchestrator.
-    - Why? Selected, reaction between selected <-> other, State, etc.
-
 ## Medium Priority
 
+1. Orchestrator:
+    - Selected state, more general interaction handling -> Event Bus?
 1. Transition change mount point/state.
 1. Transition curvature improvement.
     - alternative calc approach (?)
