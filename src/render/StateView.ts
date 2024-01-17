@@ -1,5 +1,7 @@
+import { Point } from '@/types/types';
 import { EventPublisher } from '@/utils/EventPublisher';
-import { RenderOrchestrator } from './RenderOrchestrator';
+import { createSVGCircle, createSVGGroup, createSVGText } from '@/utils/svg';
+import { ParentOrchestrator } from './ParentOrchestrator';
 
 export type StateViewConfig = {
   x: number; // x coordinate
@@ -22,22 +24,16 @@ const defaultConfig: StateViewConfig = {
 };
 
 export class StateView {
-  private orchestrator: RenderOrchestrator;
+  private orchestrator: ParentOrchestrator;
   private config: StateViewConfig;
 
-  private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  private hover = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'circle',
-  );
-  private circle = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'circle',
-  );
-  private text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  private group = createSVGGroup();
+  private hover = createSVGCircle();
+  private circle = createSVGCircle();
+  private label = createSVGText();
 
   constructor(
-    orchestrator: RenderOrchestrator,
+    orchestrator: ParentOrchestrator,
     config: Partial<StateViewConfig> = {},
   ) {
     this.orchestrator = orchestrator;
@@ -48,39 +44,33 @@ export class StateView {
 
     this.initHover();
     this.initCircle();
-    this.initText();
+    this.initLabel();
     this.initGroup();
-    this.renderMountPoints();
-
-    this.group.addEventListener('mousedown', this.mouseDownListener);
-    this.group.addEventListener('contextmenu', this.contextMenuListener);
+    this.initMountPoints();
   }
 
   private initHover() {
     const { r, hm } = this.config;
-
     this.hover.setAttribute('cx', r + hm + '');
     this.hover.setAttribute('cy', r + hm + '');
     this.hover.setAttribute('r', r + hm + '');
     this.hover.style.fill = 'transparent';
   }
 
-  private initText() {
+  private initLabel() {
     const { r, hm, name } = this.config;
-
-    this.text.setAttribute('x', r + hm + '');
-    this.text.setAttribute('y', r + hm + '');
-    this.text.style.fill = 'var(--bone)';
-    this.text.style.userSelect = 'none';
-    this.text.style.textAnchor = 'middle';
-    this.text.style.dominantBaseline = 'central';
-    this.text.style.fontSize = '1.2rem';
-    this.text.textContent = name;
+    this.label.setAttribute('x', r + hm + '');
+    this.label.setAttribute('y', r + hm + '');
+    this.label.style.fill = 'var(--bone)';
+    this.label.style.userSelect = 'none';
+    this.label.style.textAnchor = 'middle';
+    this.label.style.dominantBaseline = 'central';
+    this.label.style.fontSize = '1.2rem';
+    this.label.textContent = name;
   }
 
   private initCircle() {
     const { r, hm } = this.config;
-
     this.circle.setAttribute('cx', r + hm + '');
     this.circle.setAttribute('cy', r + hm + '');
     this.circle.setAttribute('r', r + '');
@@ -91,13 +81,17 @@ export class StateView {
 
   private initGroup() {
     const { x, y, hm } = this.config;
-
     this.group.style.cursor = 'move';
     this.group.setAttribute('transform', `translate(${x - hm}, ${y - hm})`);
     this.group.appendChild(this.hover);
     this.group.appendChild(this.circle);
-    this.group.appendChild(this.text);
+    this.group.appendChild(this.label);
+
+    this.group.addEventListener('mousedown', this.startMoving);
+    this.group.addEventListener('contextmenu', this.bringToTop);
   }
+
+  /* ========================= UTILS ========================= */
 
   getName() {
     return this.config.name;
@@ -107,37 +101,44 @@ export class StateView {
     return this.group;
   }
 
-  /* ========================= MOVEMENT ========================= */
+  /* ========================= LISTENERS ========================= */
 
-  private dx = 0;
-  private dy = 0;
-
-  /**
-   * Top left corner coordinates of the whole group.
-   */
-  private getGroupCoords() {
-    const matrix = this.group.getCTM()!;
-    const gx = matrix.e; // group x
-    const gy = matrix.f; // group y
-
-    return { gx, gy };
+  disableListeners() {
+    this.group.style.pointerEvents = 'none';
   }
 
-  private mouseDownListener = (e: MouseEvent) => {
-    const { clientX: cx, clientY: cy } = e;
-    const { gx, gy } = this.getGroupCoords();
+  enableListeners() {
+    this.group.style.pointerEvents = 'auto';
+  }
 
-    this.dx = cx - gx; // delta x
-    this.dy = cy - gy; // delta y
+  private bringToTop = (e: MouseEvent) => {
+    e.preventDefault();
 
-    document.addEventListener('mousemove', this.mouseMoveListener);
-    document.addEventListener('mouseup', this.mouseUpListener);
+    const parent = this.group.parentNode!;
+    parent.appendChild(this.group);
   };
 
-  private mouseMoveListener = (e: MouseEvent) => {
+  /* ========================= MOVING ========================= */
+
+  private dx = 0; // delta x, for click correction
+  private dy = 0; // delta y, for click correction
+
+  private startMoving = (e: MouseEvent) => {
+    const { x: cx, y: cy } = e;
+    const { x: gx, y: gy } = this.getGroupStartPoint();
+
+    this.dx = cx - gx;
+    this.dy = cy - gy;
+
+    this.orchestrator.startStateMoving(this);
+    document.addEventListener('mousemove', this.handleMoving);
+    document.addEventListener('mouseup', this.endMoving);
+  };
+
+  private handleMoving = (e: MouseEvent) => {
     const { r, hm, moveStep } = this.config;
 
-    const { clientX: cx, clientY: cy } = e;
+    const { x: cx, y: cy } = e;
     let x = Math.round((cx - this.dx) / moveStep) * moveStep;
     let y = Math.round((cy - this.dy) / moveStep) * moveStep;
 
@@ -154,33 +155,24 @@ export class StateView {
       if (y > max_y - 2 * r - hm) y = max_y - 2 * r - hm;
     }
 
-    this.updatePosition({ x: x, y: y });
+    this.updatePosition({ x, y });
   };
 
-  private mouseUpListener = () => {
-    document.removeEventListener('mousemove', this.mouseMoveListener);
-    document.removeEventListener('mouseup', this.mouseUpListener);
+  private endMoving = () => {
+    this.orchestrator.endStateMoving(this);
+    document.removeEventListener('mousemove', this.handleMoving);
+    document.removeEventListener('mouseup', this.endMoving);
   };
 
-  private updatePosition(coords: Coords) {
-    this.group.setAttribute('transform', `translate(${coords.x}, ${coords.y})`);
+  private updatePosition(point: Point) {
+    this.group.setAttribute('transform', `translate(${point.x}, ${point.y})`);
     this.publishMountPointsUpdate();
   }
-
-  /**
-   * Bring the group to the front when right-clicked.
-   */
-  private contextMenuListener = (e: MouseEvent) => {
-    e.preventDefault();
-
-    const parent = this.group.parentNode!;
-    parent.appendChild(this.group);
-  };
 
   /* ========================= MOUNT POINTS ========================= */
 
   private eventPublisher = new EventPublisher<{
-    mountpoints: [mountPoints: Coords[]];
+    mountpoints: [mountPoints: Point[]];
   }>();
 
   get subscribe() {
@@ -194,10 +186,9 @@ export class StateView {
   /**
    * Use parametric equations for a circle to get the relative mount points coordinates.
    */
-  private getRelativeMountPoints(): Coords[] {
+  private getRelativeMountPoints(): Point[] {
     const { r, mountPointsNumber } = this.config;
-
-    const points: Coords[] = [];
+    const points: Point[] = [];
 
     const cx = this.circle.cx.baseVal.value;
     const cy = this.circle.cy.baseVal.value;
@@ -209,7 +200,7 @@ export class StateView {
       const x = Math.round(cx + r * Math.cos(radians));
       const y = Math.round(cy + r * Math.sin(radians));
 
-      points.push({ x: x, y: y });
+      points.push({ x, y });
     }
 
     return points;
@@ -218,12 +209,12 @@ export class StateView {
   /**
    * Use parametric equations for a circle to get the absolute mount points coordinates.
    */
-  getAbsoluteMountPoints(): Coords[] {
+  getAbsoluteMountPoints(): Point[] {
     const matrix = this.group.getCTM()!;
     const gx = matrix.e;
     const gy = matrix.f;
 
-    return this.getRelativeMountPoints().map(({ x: x, y: y }) => ({
+    return this.getRelativeMountPoints().map(({ x, y }) => ({
       x: gx + x,
       y: gy + y,
     }));
@@ -243,15 +234,12 @@ export class StateView {
 
   private mountPointsCircles: SVGCircleElement[] = [];
 
-  private renderMountPoints() {
+  private initMountPoints() {
     if (this.mountPointsCircles.length > 0) return;
 
     const mountPoints = this.getRelativeMountPoints();
-    for (const [i, { x: x, y: y }] of mountPoints.entries()) {
-      const mountPointElement = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'circle',
-      );
+    for (const [i, { x, y }] of mountPoints.entries()) {
+      const mountPointElement = createSVGCircle();
 
       mountPointElement.setAttribute('cx', x + '');
       mountPointElement.setAttribute('cy', y + '');
@@ -290,11 +278,25 @@ export class StateView {
     }
   };
 
-  /* ========================= MOUNT POINTS UTILS ========================= */
+  /* ========================= POINT UTILS ========================= */
 
-  getCenterCoords(): Coords {
+  /**
+   * Top left point of the group.
+   */
+  private getGroupStartPoint(): Point {
+    const matrix = this.group.getCTM()!;
+    const gx = matrix.e; // group x
+    const gy = matrix.f; // group y
+
+    return { x: gx, y: gy };
+  }
+
+  /**
+   * Center point of the group.
+   */
+  getGroupCenterPoint(): Point {
     const { r, hm } = this.config;
-    const { gx, gy } = this.getGroupCoords();
+    const { x: gx, y: gy } = this.getGroupStartPoint();
 
     return {
       x: gx + r + hm,
@@ -302,8 +304,11 @@ export class StateView {
     };
   }
 
-  getClosestMountPointIndex(coords: Coords) {
-    const { x: x, y: y } = coords;
+  /**
+   * Get the closest mount point index to a given point.
+   */
+  getClosestMountPointIndex(point: Point) {
+    const { x, y } = point;
     const mountPoints = this.getAbsoluteMountPoints();
 
     let closestIndex = 0;

@@ -1,4 +1,6 @@
-import { RenderOrchestrator } from './RenderOrchestrator';
+import { Point } from '@/types/types';
+import { createSVGCircle, createSVGGroup, createSVGPath } from '@/utils/svg';
+import { ParentOrchestrator } from './ParentOrchestrator';
 import { StateView } from './StateView';
 
 export type TransitionViewConfig = {
@@ -10,22 +12,15 @@ const defaultConfig: TransitionViewConfig = {
 };
 
 export class TransitionView {
-  private orchestrator: RenderOrchestrator;
-  private startStateView?: StateView;
-  private startMountPointIndex?: number;
-  private endStateView?: StateView;
-  private endMountPointIndex?: number;
+  private orchestrator: ParentOrchestrator;
   private config: TransitionViewConfig;
 
-  private group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  private hover = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'path',
-  );
-  private path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  private group = createSVGGroup();
+  private hover = createSVGPath();
+  private path = createSVGPath();
 
   constructor(
-    orchestrator: RenderOrchestrator,
+    orchestrator: ParentOrchestrator,
     config: Partial<TransitionViewConfig> = {},
   ) {
     this.orchestrator = orchestrator;
@@ -39,7 +34,6 @@ export class TransitionView {
     this.initGroup();
     this.initControls();
 
-    this.group.addEventListener('contextmenu', this.contextMenuListener);
     this.setInMotion(this.config.inMotion);
   }
 
@@ -59,99 +53,109 @@ export class TransitionView {
   private initGroup() {
     this.group.appendChild(this.hover);
     this.group.appendChild(this.path);
+    this.group.addEventListener('mouseenter', this.showControls);
+    this.group.addEventListener('mouseleave', this.hideControls);
+    this.group.addEventListener('contextmenu', this.bringToTop);
+  }
+
+  /* ========================= UTILS ========================= */
+
+  setInMotion(inMotion: boolean) {
+    inMotion ? this.disableListeners() : this.enableListeners();
+    this.config.inMotion = inMotion;
   }
 
   getSvg(): SVGElement {
     return this.group;
   }
 
-  /* ========================= Listeners ========================= */
+  /* ========================= LISTENERS ========================= */
 
-  setInMotion(inMotion: boolean) {
-    this.config.inMotion = inMotion;
-
-    if (inMotion) {
-      this.group.removeEventListener('mouseenter', this.renderControls);
-      this.group.removeEventListener('mouseleave', this.removeControls);
-    } else {
-      this.group.style.pointerEvents = 'auto';
-      this.group.addEventListener('mouseenter', this.renderControls);
-      this.group.addEventListener('mouseleave', this.removeControls);
-    }
+  disableListeners() {
+    this.group.style.pointerEvents = 'none';
   }
 
-  /**
-   * Bring the path to the front when right-clicked.
-   */
-  private contextMenuListener = (e: MouseEvent) => {
+  enableListeners() {
+    this.group.style.pointerEvents = 'auto';
+  }
+
+  private bringToTop = (e: MouseEvent) => {
     e.preventDefault();
 
-    const parent = this.path.parentNode!;
-    parent.appendChild(this.path);
+    const parent = this.group.parentNode!;
+    parent.appendChild(this.group);
   };
 
   /* ========================= STATES CONNECTION ========================= */
 
-  setStartStateView(stateView: StateView, mountPointIndex: number) {
-    this.unsetStartStateView();
+  private startStateView?: StateView;
+  private startMountPointIndex?: number;
+  private endStateView?: StateView;
+  private endMountPointIndex?: number;
+
+  setStartState(stateView: StateView, mountPointIndex: number) {
+    this.unsetStartState();
 
     this.startStateView = stateView;
     this.startMountPointIndex = mountPointIndex;
 
-    this.updateStartListener(stateView.getAbsoluteMountPoints());
-    stateView.subscribe('mountpoints', this.updateStartListener);
+    this.updateStartSubscriber(stateView.getAbsoluteMountPoints());
+    stateView.subscribe('mountpoints', this.updateStartSubscriber);
   }
 
-  unsetStartStateView() {
+  unsetStartState() {
     if (this.startStateView) {
-      this.startStateView.unsubscribe('mountpoints', this.updateStartListener);
+      this.startStateView.unsubscribe(
+        'mountpoints',
+        this.updateStartSubscriber,
+      );
     }
 
     this.startStateView = undefined;
     this.startMountPointIndex = undefined;
   }
 
-  setEndStateView(stateView: StateView, mountPointIndex: number) {
-    this.unsetEndStateView();
+  setEndState(stateView: StateView, mountPointIndex: number) {
+    this.unsetEndState();
 
     this.endStateView = stateView;
     this.endMountPointIndex = mountPointIndex;
 
-    this.updateEndListener(stateView.getAbsoluteMountPoints());
-    stateView.subscribe('mountpoints', this.updateEndListener);
+    this.updateEndSubscriber(stateView.getAbsoluteMountPoints());
+    stateView.subscribe('mountpoints', this.updateEndSubscriber);
   }
 
-  unsetEndStateView() {
+  unsetEndState() {
     if (this.endStateView) {
-      this.endStateView.unsubscribe('mountpoints', this.updateEndListener);
+      this.endStateView.unsubscribe('mountpoints', this.updateEndSubscriber);
     }
 
     this.endStateView = undefined;
     this.endMountPointIndex = undefined;
   }
 
-  private updateStartListener = (mountPoints: Coords[]) => {
+  private updateStartSubscriber = (mountPoints: Point[]) => {
     const coords = mountPoints[this.startMountPointIndex!];
     this.updateStart(coords);
   };
 
-  private updateEndListener = (mountPoints: Coords[]) => {
+  private updateEndSubscriber = (mountPoints: Point[]) => {
     const coords = mountPoints[this.endMountPointIndex!];
     this.updateEnd(coords);
   };
 
   /* ========================= UPDATE PATH ========================= */
 
-  private startCoords: Coords = { x: 0, y: 0 };
-  private endCoords: Coords = { x: 0, y: 0 };
-  private controlDistance = 50;
+  private startCoords: Point = { x: 0, y: 0 };
+  private endCoords: Point = { x: 0, y: 0 };
+  private controlDistance = 0;
 
-  updateStart = (coords: Coords) => {
+  updateStart = (coords: Point) => {
     this.startCoords = coords;
     this.updatePathData();
   };
 
-  updateEnd = (coords: Coords) => {
+  updateEnd = (coords: Point) => {
     this.endCoords = coords;
     this.updatePathData();
   };
@@ -231,18 +235,9 @@ export class TransitionView {
 
   /* ========================= CONTROLS ========================= */
 
-  private startCircle = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'circle',
-  );
-  private endCircle = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'circle',
-  );
-  private controlCircle = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'circle',
-  );
+  private startCircle = createSVGCircle();
+  private endCircle = createSVGCircle();
+  private controlCircle = createSVGCircle();
 
   private initControls() {
     this.startCircle.setAttribute('r', '5');
@@ -263,7 +258,7 @@ export class TransitionView {
     this.controlCircle.addEventListener('mousedown', this.onStartCurvature);
   }
 
-  private renderControls = () => {
+  private showControls = () => {
     this.startCircle.setAttribute('cx', this.startCoords.x + '');
     this.startCircle.setAttribute('cy', this.startCoords.y + '');
     this.group.appendChild(this.startCircle);
@@ -278,7 +273,7 @@ export class TransitionView {
     this.group.appendChild(this.controlCircle);
   };
 
-  private removeControls = () => {
+  private hideControls = () => {
     this.startCircle?.remove();
     this.endCircle?.remove();
     this.controlCircle?.remove();

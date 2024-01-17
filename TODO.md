@@ -2,16 +2,17 @@
 
 ## High Priority
 
-1. Transition change mount point/state.
 1. Control inverse to orchestrator.
     - Why? Selected, reaction between selected <-> other, State, etc.
 
 ## Medium Priority
 
+1. Transition change mount point/state.
 1. Transition curvature improvement.
     - alternative calc approach (?)
     - write docs
     - same point connection
+    - think about "stable" vector approach, meaning if curvature is downwards, it remains downwards, no matter the states position
 1. Transition set label.
 1. State set label.
 
