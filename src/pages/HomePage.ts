@@ -29,19 +29,33 @@ class HomePage extends HTMLElement {
       });
       container.appendChild(renderOrchestrator.getSvg());
 
-      const q1 = renderOrchestrator.addStateFromConfig({
-        name: 'Q1',
-        x: Math.round((width / 3 - 35) / 10) * 10,
-        y: Math.round((height / 2 - 35) / 10) * 10,
-      });
-      const q2 = renderOrchestrator.addStateFromConfig({
-        name: 'Q2',
-        x: Math.round(((2 * width) / 3 - 35) / 10) * 10,
-        y: Math.round((height / 2 - 35) / 10) * 10,
-        // y: Math.round(((1.5 * height) / 2 - 35) / 10) * 10,
-      });
+      const containerCenter = {
+        x: width / 2,
+        y: height / 2,
+      };
 
-      renderOrchestrator.addTransition(q1, q2);
+      const statesCount = 8;
+      const states = [];
+      for (let i = 0; i < statesCount; i++) {
+        const angle = (i * Math.PI) / (statesCount / 2);
+        const x = containerCenter.x + 300 * Math.cos(angle);
+        const y = containerCenter.y + 300 * Math.sin(angle);
+
+        const state = renderOrchestrator.addStateFromConfig({
+          name: `Q${i}`,
+          x: Math.round((x - 35) / 10) * 10,
+          y: Math.round((y - 35) / 10) * 10,
+        });
+        states.push(state);
+      }
+
+      for (let i = 0; i < states.length; i++) {
+        const state1 = states[i];
+        const state2 = states[(i + 1) % states.length];
+        renderOrchestrator.addTransition(state1, state2);
+      }
+
+      // but start from left top
     } else {
       console.error('Could not find svg-container.');
     }

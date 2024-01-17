@@ -55,9 +55,16 @@ export class RenderOrchestrator implements ParentOrchestrator {
   addTransition(stateView1: StateView, stateView2: StateView): TransitionView {
     // TODO: check if transition already exists
 
+    const sv1mpi = stateView1.getClosestMountPointIndex(
+      stateView2.getGroupCenterPoint(),
+    );
+    const sv2mpi = stateView2.getClosestMountPointIndex(
+      stateView1.getGroupCenterPoint(),
+    );
+
     const transitionView = new TransitionView(this);
-    transitionView.setStartState(stateView1, 0);
-    transitionView.setEndState(stateView2, 6);
+    transitionView.setStartState(stateView1, sv1mpi);
+    transitionView.setEndState(stateView2, sv2mpi);
 
     this.transitions.push(transitionView);
     this.svgRoot.appendChild(transitionView.getSvg());
