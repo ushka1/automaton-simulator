@@ -2,28 +2,29 @@
 
 ## High Priority
 
-1. Transition:
-   - change mountPoints
-   - change state
-   - change curvature
-   - add label
-   - change label
-1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
-   1. If same state, protect.
-
-1. Why orchestrator?
-Selected, Reaction between selected <-> other, State
+1. Transition curvature improvement.
+    - `a == 0` bug
+    - sign in distance fix
+    - alternative calc approach (?)
+    - write docs
+1. Transition change mount point/state.
+1. Control inverse to orchestrator.
+    - Why? Selected, reaction between selected <-> other, State, etc.
 
 ## Medium Priority
 
-1. Implement separated architecture (view and behavior).
-1. Refactor StateView.
-1. Add docstrings.
+1. Transition set label.
+1. State set label.
 
 ## Low Priority
 
+1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
+   1. If same state, protect.
+1. Add docstrings.
+
 ## Ideas
 
+1. Implement separated architecture (view and behavior).
 1. Add matchers for the router.
 1. Think about another `Route`-like custom element, that is a `<div>` containing `<template>` listening to `PathPublisher` path changes and accordingly rendering/removing its content.
 
