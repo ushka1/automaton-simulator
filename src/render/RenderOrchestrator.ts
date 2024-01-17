@@ -1,36 +1,36 @@
 import { StateView, StateViewConfig } from './StateView';
 import { TransitionView } from './TransitionView';
+import { cloneSVGFromTemplate } from './utils/helpers';
+import {
+  ListenerSwitcher,
+  ListenerSwitcherFilter,
+  ParentOrchestrator,
+  Point,
+} from './utils/interfaces';
 
 type RenderOrchestratorConfig = {
   width: number;
   height: number;
 };
 
-export class RenderOrchestrator {
-  private svg: SVGSVGElement;
+export class RenderOrchestrator implements ParentOrchestrator {
   private states: StateView[] = [];
+  private transitions: TransitionView[] = [];
+
+  private svgRoot: SVGSVGElement = cloneSVGFromTemplate('as-svg-root');
 
   constructor(config: RenderOrchestratorConfig) {
     const { width, height } = config;
-
-    const template = document.getElementById(
-      'as-svg-board',
-    ) as HTMLTemplateElement;
-    const svg = document
-      .importNode(template.content, true)
-      .querySelector('svg') as SVGSVGElement;
-
-    svg.setAttribute('width', width + '');
-    svg.setAttribute('height', height + '');
-    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    this.svg = svg;
+    this.svgRoot.setAttribute('width', width + '');
+    this.svgRoot.setAttribute('height', height + '');
+    this.svgRoot.setAttribute('viewBox', `0 0 ${width} ${height}`);
   }
 
-  /* ========================= CONTROLS ========================= */
+  /* ========================= CONTROLS - STATE ========================= */
 
   addState(state: StateView) {
     this.states.push(state);
-    this.svg.appendChild(state.getSvg());
+    this.svgRoot.appendChild(state.getSvg());
   }
 
   addStateFromConfig(config: Partial<StateViewConfig> = {}): StateView {
@@ -40,40 +40,79 @@ export class RenderOrchestrator {
     return state;
   }
 
-  removeState(state: StateView): void {
+  removeState(state: StateView) {
+    // TODO: remove all transitions connected to this state
+
     const index = this.states.indexOf(state);
     if (index !== -1) {
       this.states.splice(index, 1);
-      this.svg.removeChild(state.getSvg());
+      this.svgRoot.removeChild(state.getSvg());
     }
   }
 
-  addTransition(stateView1: StateView, stateView2: StateView): void {
-    const transitionView = new TransitionView();
-    transitionView.setStartStateView(stateView1, 0);
-    transitionView.setEndStateView(stateView2, 6);
+  /* ========================= CONTROLS - TRANSITION ========================= */
 
-    this.svg.appendChild(transitionView.getSvg());
+  addTransition(stateView1: StateView, stateView2: StateView): TransitionView {
+    // TODO: check if transition already exists
+
+    const sv1mpi = stateView1.getClosestMountPointIndex(
+      stateView2.getGroupCenterPoint(),
+    );
+    const sv2mpi = stateView2.getClosestMountPointIndex(
+      stateView1.getGroupCenterPoint(),
+    );
+
+    const transitionView = new TransitionView(this);
+    transitionView.setStartState(stateView1, sv1mpi);
+    transitionView.setEndState(stateView2, sv2mpi);
+
+    this.transitions.push(transitionView);
+    this.svgRoot.appendChild(transitionView.getSvg());
+    return transitionView;
+  }
+
+  removeTransition(transition: TransitionView) {
+    const index = this.transitions.indexOf(transition);
+    if (index !== -1) {
+      this.transitions.splice(index, 1);
+      this.svgRoot.removeChild(transition.getSvg());
+    }
   }
 
   /* ========================= TRANSITIONS ========================= */
 
+  startStateMoving(stateView: StateView): void {
+    this.disableListeners(this.states, { excluded: [stateView] });
+    this.disableListeners(this.transitions);
+  }
+
+  endStateMoving(): void {
+    this.enableListeners(this.states);
+    this.enableListeners(this.transitions);
+  }
+
   startNewTransition = (fromState: StateView, mountPointIndex: number) => {
-    const transitionView = new TransitionView();
-    transitionView.setStartStateView(fromState, mountPointIndex);
+    this.disableListeners(this.transitions);
+
+    // TODO: Think about this inMotion, is it neccessary if orchestrator controls it?
+    const transitionView = new TransitionView(this, { inMotion: true });
+    transitionView.setStartState(fromState, mountPointIndex);
     transitionView.updateEnd(
       fromState.getAbsoluteMountPoints()[mountPointIndex],
     );
 
-    this.svg.appendChild(transitionView.getSvg());
+    this.transitions.push(transitionView);
+    this.svgRoot.appendChild(transitionView.getSvg());
 
-    const startNewTransitionMousemove = (e: MouseEvent) => {
-      // TODO: parametrize 2.5
-      const x = e.clientX - this.svg.getBoundingClientRect().left - 2.5;
-      const y = e.clientY - this.svg.getBoundingClientRect().top - 2.5;
-      transitionView.updateEnd({ x, y });
+    const handleNewTransition = (e: MouseEvent) => {
+      const point = this.coordsToPoint(e);
 
-      const root = this.svg.getRootNode();
+      const strokeWidth = transitionView.getStrokeWidth();
+      const x = point.x - strokeWidth / 2;
+      const y = point.y - strokeWidth / 2;
+      transitionView.updateEnd({ x: x, y: y });
+
+      const root = this.svgRoot.getRootNode();
       if (root instanceof ShadowRoot || root instanceof Document) {
         const elements = root.elementsFromPoint(e.clientX, e.clientY);
         const mountpoint = elements?.find((el) => el.id === 'mountpoint');
@@ -83,24 +122,80 @@ export class RenderOrchestrator {
           const stateName = mountpoint.getAttribute('data-state');
           const index = Number(mountpoint.getAttribute('data-index'));
 
-          const state = this.states.find((s) => s.config.name === stateName);
+          const state = this.states.find((s) => s.getName() === stateName);
           if (state) {
-            transitionView.setEndStateView(state, index);
+            transitionView.setEndState(state, index);
           }
         }
       }
     };
 
-    const startNewTransitionMouseup = () => {
-      document.removeEventListener('mousemove', startNewTransitionMousemove);
-      document.removeEventListener('mouseup', startNewTransitionMouseup);
+    const endNewTransition = () => {
+      transitionView.setInMotion(false);
+      this.enableListeners(this.transitions);
+
+      document.removeEventListener('mousemove', handleNewTransition);
+      document.removeEventListener('mouseup', endNewTransition);
     };
 
-    document.addEventListener('mousemove', startNewTransitionMousemove);
-    document.addEventListener('mouseup', startNewTransitionMouseup);
+    document.addEventListener('mousemove', handleNewTransition);
+    document.addEventListener('mouseup', endNewTransition);
+  };
+
+  /* ========================= LISTENERS ========================= */
+
+  private enableListeners(
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
+  ) {
+    this.switchListeners(true, elements, { excluded, included });
+  }
+
+  private disableListeners(
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
+  ) {
+    this.switchListeners(false, elements, { excluded, included });
+  }
+
+  private switchListeners(
+    enable: boolean,
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
+  ) {
+    excluded ??= [];
+    included ??= [];
+
+    if (included.length > 0) {
+      for (const elm of included) {
+        if (enable) {
+          elm.enableListeners();
+        } else {
+          elm.disableListeners();
+        }
+      }
+    } else {
+      for (const elm of elements) {
+        if (!excluded.includes(elm)) {
+          if (enable) {
+            elm.enableListeners();
+          } else {
+            elm.disableListeners();
+          }
+        }
+      }
+    }
+  }
+  /* ========================= UTILS ========================= */
+
+  coordsToPoint = (coords: Point): Point => {
+    return {
+      x: coords.x - this.svgRoot.getBoundingClientRect().left,
+      y: coords.y - this.svgRoot.getBoundingClientRect().top,
+    };
   };
 
   getSvg(): SVGSVGElement {
-    return this.svg;
+    return this.svgRoot;
   }
 }
