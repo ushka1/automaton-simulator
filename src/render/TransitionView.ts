@@ -47,7 +47,6 @@ export class TransitionView {
     this.path.style.fill = 'none';
     this.path.style.stroke = 'var(--blue)';
     this.path.style.strokeWidth = '5';
-    this.path.style.pointerEvents = 'none';
     this.path.setAttribute('marker-end', 'url(#arrow)');
   }
 
@@ -55,7 +54,6 @@ export class TransitionView {
     this.hover.style.fill = 'none';
     this.hover.style.stroke = 'transparent';
     this.hover.style.strokeWidth = '10';
-    this.hover.style.pointerEvents = 'none';
   }
 
   private initGroup() {
@@ -76,7 +74,7 @@ export class TransitionView {
       this.group.removeEventListener('mouseenter', this.renderControls);
       this.group.removeEventListener('mouseleave', this.removeControls);
     } else {
-      this.hover.style.pointerEvents = 'auto';
+      this.group.style.pointerEvents = 'auto';
       this.group.addEventListener('mouseenter', this.renderControls);
       this.group.addEventListener('mouseleave', this.removeControls);
     }
@@ -146,7 +144,7 @@ export class TransitionView {
 
   private startCoords: Coords = { x: 0, y: 0 };
   private endCoords: Coords = { x: 0, y: 0 };
-  private curvatureOffset = 0;
+  private controlDist = 50;
 
   updateStart = (coords: Coords) => {
     this.startCoords = coords;
@@ -158,42 +156,74 @@ export class TransitionView {
     this.updatePathData();
   };
 
-  private getControlCoords(): Coords {
-    const { x: x1, y: y1 } = this.startCoords;
-    const { x: x2, y: y2 } = this.endCoords;
-
-    const cx = (x1 + x2) / 2;
-    const cy = (y1 + y2) / 2 - this.curvatureOffset;
+  /*
+   * Start from normal plane, then rotate.
+   * OR
+   * Work on rotated plane (current).
+   */
+  private getControlCoords() {
+    const { x: sx, y: sy } = this.startCoords;
+    const { x: ex, y: ey } = this.endCoords;
+    const cx = (sx + ex) / 2;
+    const cy = (sy + ey) / 2;
 
     // f(x) = ax + b
-    const a = (y2 - y1) / (x2 - x1);
-    const b = y1 - a * x1;
+    const a = (ey - sy) / (ex - sx);
+    // const b = sy - a * sx;
+    // const f = (x: number) => a * x + b;
 
-    // f(x) = ex + f
+    let gEigenvector;
+    if (a == 0) {
+      if (sx < ex) {
+        gEigenvector = [0, 1];
+      } else {
+        gEigenvector = [0, -1];
+      }
+    } else if (!isFinite(a)) {
+      if (sy < ey) {
+        gEigenvector = [-1, 0];
+      } else {
+        gEigenvector = [1, 0];
+      }
+    } else {
+      // g(x) = dx + e
+      const d = -1 / a;
+      // const e = cy - d * cx;
+      // const e = b;
+      const e = 0; // does not matter in fact
+      const g = (x: number) => d * x + e;
 
-    // f(x_1) = e*x_1 + f
-    // f(x_1) = y_1
-    // y_1 = e*x_1 + f
-    // f = y_1 - e*x_1
-    const e = -1 / a;
-    const f = cy - e * cx;
+      let x1 = 1;
+      let x2 = 0;
+      if ((sx > ex && sy > ey) || (sx < ex && sy > ey)) {
+        [x1, x2] = [x2, x1];
+      }
 
-    const E = e;
-    const F = -1;
-    const G = f;
+      const y1 = g(x1);
+      const y2 = g(x2);
 
-    // base vector = []
+      const gVector = [x2 - x1, y2 - y1];
+      const gVectorLength = Math.sqrt(gVector[0] ** 2 + gVector[1] ** 2);
+      gEigenvector = gVector.map((x) => x / gVectorLength);
+    }
 
-    return { x: cx, y: cy };
+    const moveVector = gEigenvector.map((x) => x * this.controlDist);
+
+    return {
+      pathX: cx + moveVector[0] * 2,
+      pathY: cy + moveVector[1] * 2,
+      controlX: cx + moveVector[0],
+      controlY: cy + moveVector[1],
+    };
   }
 
   private updatePathData() {
-    const { x: x1, y: y1 } = this.startCoords;
-    const { x: x2, y: y2 } = this.endCoords;
-    const { x: cx, y: cy } = this.getControlCoords();
+    const { x: sx, y: sy } = this.startCoords;
+    const { x: ex, y: ey } = this.endCoords;
+    const { pathX: cx, pathY: cy } = this.getControlCoords();
 
     const pathData =
-      'M' + x1 + ' ' + y1 + ' Q' + cx + ' ' + cy + ' ' + x2 + ' ' + y2;
+      'M' + sx + ' ' + sy + ' Q' + cx + ' ' + cy + ' ' + ex + ' ' + ey;
 
     this.path.setAttribute('d', pathData);
     this.hover.setAttribute('d', pathData);
@@ -209,7 +239,7 @@ export class TransitionView {
     'http://www.w3.org/2000/svg',
     'circle',
   );
-  private centerCircle = document.createElementNS(
+  private controlCircle = document.createElementNS(
     'http://www.w3.org/2000/svg',
     'circle',
   );
@@ -225,12 +255,12 @@ export class TransitionView {
     this.endCircle.style.pointerEvents = 'auto';
     this.endCircle.style.cursor = 'pointer';
 
-    this.centerCircle.setAttribute('r', '5');
-    this.centerCircle.style.fill = 'var(--bone-dark)';
-    this.centerCircle.style.pointerEvents = 'auto';
-    this.centerCircle.style.cursor = 'pointer';
+    this.controlCircle.setAttribute('r', '5');
+    this.controlCircle.style.fill = 'var(--bone-dark)';
+    this.controlCircle.style.pointerEvents = 'auto';
+    this.controlCircle.style.cursor = 'pointer';
 
-    this.centerCircle.addEventListener('mousedown', this.onStartCurvature);
+    this.controlCircle.addEventListener('mousedown', this.onStartCurvature);
   }
 
   private renderControls = () => {
@@ -242,41 +272,47 @@ export class TransitionView {
     this.endCircle.setAttribute('cy', this.endCoords.y + '');
     this.group.appendChild(this.endCircle);
 
-    this.centerCircle.setAttribute('cx', this.getControlCoords().x + '');
-    this.centerCircle.setAttribute(
-      'cy',
-      this.getControlCoords().y + this.curvatureOffset / 2 + '',
-    );
-    this.group.appendChild(this.centerCircle);
+    const { controlX: cx, controlY: cy } = this.getControlCoords();
+    this.controlCircle.setAttribute('cx', cx + '');
+    this.controlCircle.setAttribute('cy', cy + '');
+    this.group.appendChild(this.controlCircle);
   };
 
   private removeControls = () => {
     this.startCircle?.remove();
     this.endCircle?.remove();
-    this.centerCircle?.remove();
+    this.controlCircle?.remove();
   };
 
   /* ========================= CONTROLS - CURVATURE ========================= */
 
-  private curvatureInitY: number = 0;
-
   private onStartCurvature = () => {
-    this.hover.style.pointerEvents = 'none';
-    this.curvatureInitY = (this.startCoords.y + this.endCoords.y) / 2;
-
+    this.group.style.pointerEvents = 'none';
     document.addEventListener('mousemove', this.onChangeCurvature);
     document.addEventListener('mouseup', this.onEndCurvature);
   };
 
   private onChangeCurvature = (e: MouseEvent) => {
-    const point = this.orchestrator.coordsToPoint(e);
-    const dy = Math.floor(this.curvatureInitY - point.y) * 2;
-    this.curvatureOffset = dy;
+    const { x: sx, y: sy } = this.startCoords;
+    const { x: ex, y: ey } = this.endCoords;
+
+    // FIXME: these calculations
+    // f(x) = ax + b
+    const a = (ey - sy) / (ex - sx);
+    const b = sy - a * sx;
+    const f = (x: number) => a * x + b;
+
+    const { x: mx, y: my } = this.orchestrator.coordsToPoint(e); // mouse x, mouse y
+    // const sign = Math.sign(f(mx) - my);
+    const sign = Math.sign(f(mx) - my) * -1;
+    const dist = Math.abs(a * mx + -1 * my + b) / Math.sqrt(a ** 2 + (-1) ** 2);
+
+    this.controlDist = dist * sign;
     this.updatePathData();
   };
 
   private onEndCurvature = () => {
-    this.hover.style.pointerEvents = 'auto';
+    this.group.style.pointerEvents = 'auto';
     document.removeEventListener('mousemove', this.onChangeCurvature);
     document.removeEventListener('mouseup', this.onEndCurvature);
   };

@@ -154,7 +154,7 @@ export class StateView {
       if (y > max_y - 2 * r - hm) y = max_y - 2 * r - hm;
     }
 
-    this.updatePosition({ x, y });
+    this.updatePosition({ x: x, y: y });
   };
 
   private mouseUpListener = () => {
@@ -209,7 +209,7 @@ export class StateView {
       const x = Math.round(cx + r * Math.cos(radians));
       const y = Math.round(cy + r * Math.sin(radians));
 
-      points.push({ x, y });
+      points.push({ x: x, y: y });
     }
 
     return points;
@@ -223,7 +223,7 @@ export class StateView {
     const gx = matrix.e;
     const gy = matrix.f;
 
-    return this.getRelativeMountPoints().map(({ x, y }) => ({
+    return this.getRelativeMountPoints().map(({ x: x, y: y }) => ({
       x: gx + x,
       y: gy + y,
     }));
@@ -247,7 +247,7 @@ export class StateView {
     if (this.mountPointsCircles.length > 0) return;
 
     const mountPoints = this.getRelativeMountPoints();
-    for (const [i, { x, y }] of mountPoints.entries()) {
+    for (const [i, { x: x, y: y }] of mountPoints.entries()) {
       const mountPointElement = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'circle',
@@ -303,7 +303,7 @@ export class StateView {
   }
 
   getClosestMountPointIndex(coords: Coords) {
-    const { x, y } = coords;
+    const { x: x, y: y } = coords;
     const mountPoints = this.getAbsoluteMountPoints();
 
     let closestIndex = 0;

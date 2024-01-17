@@ -48,12 +48,13 @@ export class RenderOrchestrator {
     }
   }
 
-  addTransition(stateView1: StateView, stateView2: StateView): void {
+  addTransition(stateView1: StateView, stateView2: StateView): TransitionView {
     const transitionView = new TransitionView(this);
     transitionView.setStartStateView(stateView1, 0);
     transitionView.setEndStateView(stateView2, 6);
 
     this.svg.appendChild(transitionView.getSvg());
+    return transitionView;
   }
 
   /* ========================= TRANSITIONS ========================= */
@@ -78,7 +79,7 @@ export class RenderOrchestrator {
       const point = this.coordsToPoint(e);
       const x = point.x - 2.5; // TODO: parametrize 2.5
       const y = point.y - 2.5; // TODO: parametrize 2.5
-      transitionView.updateEnd({ x, y });
+      transitionView.updateEnd({ x: x, y: y });
 
       const root = this.svg.getRootNode();
       if (root instanceof ShadowRoot || root instanceof Document) {
