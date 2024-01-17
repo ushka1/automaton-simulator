@@ -17,6 +17,8 @@
 
 ## Low Priority
 
+1. Modularize classes:
+    - Orchestrator -> StateManager, TransitionManager, ListenerManager (?)
 1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
    1. If same state, protect.
 1. Add docstrings.

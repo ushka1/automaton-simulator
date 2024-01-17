@@ -1,7 +1,14 @@
-import { Point } from '@/types/types';
-import { EventPublisher } from '@/utils/EventPublisher';
-import { createSVGCircle, createSVGGroup, createSVGText } from '@/utils/svg';
-import { ParentOrchestrator } from './ParentOrchestrator';
+import { EventPublisher } from '@/shared/EventPublisher';
+import {
+  createSVGCircle,
+  createSVGGroup,
+  createSVGText,
+} from './utils/helpers';
+import {
+  ListenerSwitcher,
+  ParentOrchestrator,
+  Point,
+} from './utils/interfaces';
 
 export type StateViewConfig = {
   x: number; // x coordinate
@@ -23,7 +30,7 @@ const defaultConfig: StateViewConfig = {
   name: '',
 };
 
-export class StateView {
+export class StateView implements ListenerSwitcher {
   private orchestrator: ParentOrchestrator;
   private config: StateViewConfig;
 

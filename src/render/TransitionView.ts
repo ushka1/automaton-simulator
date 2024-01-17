@@ -1,7 +1,14 @@
-import { Point } from '@/types/types';
-import { createSVGCircle, createSVGGroup, createSVGPath } from '@/utils/svg';
-import { ParentOrchestrator } from './ParentOrchestrator';
 import { StateView } from './StateView';
+import {
+  createSVGCircle,
+  createSVGGroup,
+  createSVGPath,
+} from './utils/helpers';
+import {
+  ListenerSwitcher,
+  ParentOrchestrator,
+  Point,
+} from './utils/interfaces';
 
 export type TransitionViewConfig = {
   inMotion: boolean;
@@ -11,7 +18,7 @@ const defaultConfig: TransitionViewConfig = {
   inMotion: false,
 };
 
-export class TransitionView {
+export class TransitionView implements ListenerSwitcher {
   private orchestrator: ParentOrchestrator;
   private config: TransitionViewConfig;
 

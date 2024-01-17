@@ -1,22 +1,16 @@
-import { Point } from '@/types/types';
-import { cloneSVGFromTemplate } from '@/utils/svg';
-import { ParentOrchestrator } from './ParentOrchestrator';
 import { StateView, StateViewConfig } from './StateView';
 import { TransitionView } from './TransitionView';
+import { cloneSVGFromTemplate } from './utils/helpers';
+import {
+  ListenerSwitcher,
+  ListenerSwitcherFilter,
+  ParentOrchestrator,
+  Point,
+} from './utils/interfaces';
 
 type RenderOrchestratorConfig = {
   width: number;
   height: number;
-};
-
-type Listenable = {
-  enableListeners(): void;
-  disableListeners(): void;
-};
-
-type ListenableFilter = {
-  excluded?: Listenable[];
-  included?: Listenable[];
 };
 
 export class RenderOrchestrator implements ParentOrchestrator {
@@ -144,42 +138,42 @@ export class RenderOrchestrator implements ParentOrchestrator {
   /* ========================= LISTENERS ========================= */
 
   private enableListeners(
-    listenables: Listenable[],
-    { excluded, included }: ListenableFilter = {},
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
   ) {
-    this.switchListeners(true, listenables, { excluded, included });
+    this.switchListeners(true, elements, { excluded, included });
   }
 
   private disableListeners(
-    listenables: Listenable[],
-    { excluded, included }: ListenableFilter = {},
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
   ) {
-    this.switchListeners(false, listenables, { excluded, included });
+    this.switchListeners(false, elements, { excluded, included });
   }
 
   private switchListeners(
     enable: boolean,
-    listenables: Listenable[],
-    { excluded, included }: ListenableFilter = {},
+    elements: ListenerSwitcher[],
+    { excluded, included }: ListenerSwitcherFilter = {},
   ) {
     excluded ??= [];
     included ??= [];
 
     if (included.length > 0) {
-      for (const l of included) {
+      for (const elm of included) {
         if (enable) {
-          l.enableListeners();
+          elm.enableListeners();
         } else {
-          l.disableListeners();
+          elm.disableListeners();
         }
       }
     } else {
-      for (const l of listenables) {
-        if (!excluded.includes(l)) {
+      for (const elm of elements) {
+        if (!excluded.includes(elm)) {
           if (enable) {
-            l.enableListeners();
+            elm.enableListeners();
           } else {
-            l.disableListeners();
+            elm.disableListeners();
           }
         }
       }
