@@ -151,7 +151,7 @@ export class TransitionView implements ListenerSwitcher {
     this.startCoords = startCoords;
 
     if (this.endStateView)
-      this.endCoords = this.endStateView.getClosestPointOnStroke(startCoords);
+      this.endCoords = this.endStateView.getClosestPointOnHover(startCoords);
 
     this.updatePathData();
   }
@@ -160,7 +160,7 @@ export class TransitionView implements ListenerSwitcher {
     this.endCoords = endCoords;
 
     if (this.startStateView)
-      this.startCoords = this.startStateView.getClosestPointOnStroke(endCoords);
+      this.startCoords = this.startStateView.getClosestPointOnHover(endCoords);
 
     this.updatePathData();
   }
@@ -178,11 +178,11 @@ export class TransitionView implements ListenerSwitcher {
   private updatePosition = () => {
     const controlPoint = this.getControlPoint();
 
-    const startPoint = this.startStateView!.getClosestPointOnStroke({
+    const startPoint = this.startStateView!.getClosestPointOnHover({
       x: controlPoint.controlX,
       y: controlPoint.controlY,
     });
-    const endPoint = this.endStateView!.getClosestPointOnStroke({
+    const endPoint = this.endStateView!.getClosestPointOnHover({
       x: controlPoint.controlX,
       y: controlPoint.controlY,
     });

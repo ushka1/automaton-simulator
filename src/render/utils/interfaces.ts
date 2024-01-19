@@ -22,7 +22,7 @@ export interface ParentOrchestrator {
   startStateMoving(stateView: StateView): void;
   endStateMoving(stateView: StateView): void;
 
-  startNewTransition(fromState: StateView, mountPointIndex: number): void;
+  startNewTransition(fromState: StateView): void;
 
   startTransitionCurving(transitionView: TransitionView): void;
   endTransitionCurving(transitionView: TransitionView): void;

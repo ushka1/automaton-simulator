@@ -2,19 +2,17 @@
 
 ## High Priority
 
-1. Get rid of the mount points, move to smoother approach.
-1. BUD: 5 under 6, does inverse control point distance calculation. (?)
+1. Refactor state hover margin, think about better way to start transition etc.
 
 ## Medium Priority
 
 1. Orchestrator:
     - Selected state, more general interaction handling -> Event Bus?
-1. Transition change mount point/state.
+1. Transition change state.
 1. Transition curvature improvement.
     - alternative calc approach (?)
     - write docs
     - same point connection
-    - think about "stable" vector approach, meaning if curvature is downwards, it remains downwards, no matter the states position
 1. Transition set label.
 1. State set label.
 
@@ -22,8 +20,6 @@
 
 1. Modularize classes:
     - Orchestrator -> StateManager, TransitionManager, ListenerManager (?)
-1. Alternative mount point discovery: while creating new transition, observe state, and use `getClosestMountPoint`.
-   1. If same state, protect.
 1. Add docstrings.
 
 ## Ideas

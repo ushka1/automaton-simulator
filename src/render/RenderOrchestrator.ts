@@ -115,13 +115,14 @@ export class RenderOrchestrator implements ParentOrchestrator {
       const root = this.svgRoot.getRootNode();
       if (root instanceof ShadowRoot || root instanceof Document) {
         const elements = root.elementsFromPoint(e.clientX, e.clientY);
-        const mountpoint = elements?.find((el) => el.id === 'mountpoint');
+        const stateElement = elements?.find((el) => el.id === 'state');
 
-        // FIXME: while starting new, automatically assigned to fromStateMountPoint
-        if (mountpoint) {
-          const stateName = mountpoint.getAttribute('data-state');
+        if (stateElement) {
+          const stateName = stateElement.getAttribute('data-state');
           const state = this.states.find((s) => s.getName() === stateName);
-          if (state) {
+
+          // TODO: Handle self-connection
+          if (state && state !== fromState) {
             transitionView.setEndState(state);
           }
         }
