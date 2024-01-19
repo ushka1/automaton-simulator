@@ -8,7 +8,6 @@ import {
   ListenerSwitcher,
   ParentOrchestrator,
   Point,
-  StateUpdate,
 } from './utils/interfaces';
 
 export type TransitionViewConfig = {
@@ -107,13 +106,13 @@ export class TransitionView implements ListenerSwitcher {
     this.unsetStartState();
     this.startStateView = stateView;
 
-    this.updateConnections();
-    stateView.subscribe('update', this.updateStartSubscriber);
+    this.updateCoords();
+    stateView.subscribe('position', this.updateStartPosition);
   }
 
   unsetStartState() {
     if (this.startStateView) {
-      this.startStateView.unsubscribe('update', this.updateStartSubscriber);
+      this.startStateView.unsubscribe('position', this.updateStartPosition);
     }
     this.startStateView = undefined;
   }
@@ -122,43 +121,25 @@ export class TransitionView implements ListenerSwitcher {
     this.unsetEndState();
     this.endStateView = stateView;
 
-    this.updateConnections();
-    stateView.subscribe('update', this.updateEndSubscriber);
+    this.updateCoords();
+    stateView.subscribe('position', this.updateEndPosition);
   }
 
   unsetEndState() {
     if (this.endStateView) {
-      this.endStateView.unsubscribe('update', this.updateEndSubscriber);
+      this.endStateView.unsubscribe('position', this.updateEndPosition);
     }
     this.endStateView = undefined;
   }
 
-  // TODO: do it just better
-  private updateConnections() {
-    if (this.startStateView && this.endStateView) {
+  // FIXME: temporary solution
+  private updateCoords() {
+    if (this.startStateView)
       this.startCoords = this.startStateView.getGroupCenterPoint();
+    if (this.endStateView)
       this.endCoords = this.endStateView.getGroupCenterPoint();
-
-      this.updateStartSubscriber(this.startStateView);
-      this.updateEndSubscriber(this.endStateView);
-    }
+    if (this.startStateView && this.endStateView) this.updatePosition();
   }
-
-  private updateStartSubscriber = (stateUpdate: StateUpdate) => {
-    const point = stateUpdate.getClosestPointOnStroke({
-      x: this.getControlCoords().controlX,
-      y: this.getControlCoords().controlY,
-    });
-    this.updateStart(point);
-  };
-
-  private updateEndSubscriber = (stateUpdate: StateUpdate) => {
-    const point = stateUpdate.getClosestPointOnStroke({
-      x: this.getControlCoords().controlX,
-      y: this.getControlCoords().controlY,
-    });
-    this.updateEnd(point);
-  };
 
   /* ========================= UPDATE PATH ========================= */
 
@@ -166,13 +147,48 @@ export class TransitionView implements ListenerSwitcher {
   private endCoords: Point = { x: 0, y: 0 };
   private controlDistance = 0;
 
-  updateStart = (coords: Point) => {
-    this.startCoords = coords;
+  updateStart(startCoords: Point) {
+    this.startCoords = startCoords;
+
+    if (this.endStateView)
+      this.endCoords = this.endStateView.getClosestPointOnStroke(startCoords);
+
     this.updatePathData();
+  }
+
+  updateEnd(endCoords: Point) {
+    this.endCoords = endCoords;
+
+    if (this.startStateView)
+      this.startCoords = this.startStateView.getClosestPointOnStroke(endCoords);
+
+    this.updatePathData();
+  }
+
+  // FIXME: temporary solution
+  private updateStartPosition = () => {
+    this.updatePosition();
   };
 
-  updateEnd = (coords: Point) => {
-    this.endCoords = coords;
+  // FIXME: temporary solution
+  private updateEndPosition = () => {
+    this.updatePosition();
+  };
+
+  private updatePosition = () => {
+    const controlPoint = this.getControlPoint();
+
+    const startPoint = this.startStateView!.getClosestPointOnStroke({
+      x: controlPoint.controlX,
+      y: controlPoint.controlY,
+    });
+    const endPoint = this.endStateView!.getClosestPointOnStroke({
+      x: controlPoint.controlX,
+      y: controlPoint.controlY,
+    });
+
+    this.startCoords = startPoint;
+    this.endCoords = endPoint;
     this.updatePathData();
   };
 
@@ -181,7 +197,7 @@ export class TransitionView implements ListenerSwitcher {
    * OR
    * Work on rotated plane (current).
    */
-  private getControlCoords() {
+  private getControlPoint() {
     const { x: sx, y: sy } = this.startCoords;
     const { x: ex, y: ey } = this.endCoords;
     const cx = (sx + ex) / 2;
@@ -240,7 +256,7 @@ export class TransitionView implements ListenerSwitcher {
   private updatePathData() {
     const { x: sx, y: sy } = this.startCoords;
     const { x: ex, y: ey } = this.endCoords;
-    const { pathX: cx, pathY: cy } = this.getControlCoords();
+    const { pathX: cx, pathY: cy } = this.getControlPoint();
 
     const pathData =
       'M' + sx + ' ' + sy + ' Q' + cx + ' ' + cy + ' ' + ex + ' ' + ey;
@@ -258,17 +274,14 @@ export class TransitionView implements ListenerSwitcher {
   private initControls() {
     this.startCircle.setAttribute('r', '5');
     this.startCircle.style.fill = 'var(--bone-dark)';
-    this.startCircle.style.pointerEvents = 'auto';
     this.startCircle.style.cursor = 'pointer';
 
     this.endCircle.setAttribute('r', '5');
     this.endCircle.style.fill = 'var(--bone-dark)';
-    this.endCircle.style.pointerEvents = 'auto';
     this.endCircle.style.cursor = 'pointer';
 
     this.controlCircle.setAttribute('r', '5');
     this.controlCircle.style.fill = 'var(--bone-dark)';
-    this.controlCircle.style.pointerEvents = 'auto';
     this.controlCircle.style.cursor = 'pointer';
 
     this.controlCircle.addEventListener('mousedown', this.onStartCurvature);
@@ -283,7 +296,7 @@ export class TransitionView implements ListenerSwitcher {
     this.endCircle.setAttribute('cy', this.endCoords.y + '');
     this.group.appendChild(this.endCircle);
 
-    const { controlX: cx, controlY: cy } = this.getControlCoords();
+    const { controlX: cx, controlY: cy } = this.getControlPoint();
     this.controlCircle.setAttribute('cx', cx + '');
     this.controlCircle.setAttribute('cy', cy + '');
     this.group.appendChild(this.controlCircle);
@@ -298,7 +311,7 @@ export class TransitionView implements ListenerSwitcher {
   /* ========================= CONTROLS - CURVATURE ========================= */
 
   private onStartCurvature = () => {
-    this.group.style.pointerEvents = 'none';
+    this.orchestrator.startTransitionCurving(this);
     document.addEventListener('mousemove', this.onChangeCurvature);
     document.addEventListener('mouseup', this.onEndCurvature);
   };
@@ -343,12 +356,12 @@ export class TransitionView implements ListenerSwitcher {
     const rdfl = adfl * sign; // relative distance from line
     this.controlDistance = rdfl;
 
-    this.updateConnections();
+    this.updateCoords();
     this.updatePathData();
   };
 
   private onEndCurvature = () => {
-    this.group.style.pointerEvents = 'auto';
+    this.orchestrator.endTransitionCurving(this);
     document.removeEventListener('mousemove', this.onChangeCurvature);
     document.removeEventListener('mouseup', this.onEndCurvature);
   };

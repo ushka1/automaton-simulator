@@ -1,4 +1,5 @@
 import { StateView } from '../StateView';
+import { TransitionView } from '../TransitionView';
 
 export interface Point {
   x: number;
@@ -22,9 +23,9 @@ export interface ParentOrchestrator {
   endStateMoving(stateView: StateView): void;
 
   startNewTransition(fromState: StateView, mountPointIndex: number): void;
+
+  startTransitionCurving(transitionView: TransitionView): void;
+  endTransitionCurving(transitionView: TransitionView): void;
 }
 
-export interface StateUpdate {
-  getClosestMountPoint(point: Point): Point;
-  getClosestPointOnStroke(point: Point): Point;
-}
+export interface StateUpdate {}

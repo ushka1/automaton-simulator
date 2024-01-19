@@ -174,13 +174,13 @@ export class StateView implements StateUpdate, ListenerSwitcher {
 
   private updatePosition(point: Point) {
     this.group.setAttribute('transform', `translate(${point.x}, ${point.y})`);
-    this.publishMountPointsUpdate();
+    this.publishPositionUpdate();
   }
 
   /* ========================= MOUNT POINTS ========================= */
 
   private eventPublisher = new EventPublisher<{
-    update: [stateUpdate: StateUpdate];
+    position: [stateUpdate: StateUpdate];
   }>();
 
   get subscribe() {
@@ -228,8 +228,8 @@ export class StateView implements StateUpdate, ListenerSwitcher {
     }));
   }
 
-  private publishMountPointsUpdate() {
-    this.eventPublisher.publish('update', this);
+  private publishPositionUpdate() {
+    this.eventPublisher.publish('position', this);
   }
 
   /* ========================= MOUNT POINTS DISPLAY ========================= */

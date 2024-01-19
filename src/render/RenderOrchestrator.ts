@@ -55,16 +55,9 @@ export class RenderOrchestrator implements ParentOrchestrator {
   addTransition(stateView1: StateView, stateView2: StateView): TransitionView {
     // TODO: check if transition already exists
 
-    const sv1mpi = stateView1.getClosestMountPointIndex(
-      stateView2.getGroupCenterPoint(),
-    );
-    const sv2mpi = stateView2.getClosestMountPointIndex(
-      stateView1.getGroupCenterPoint(),
-    );
-
     const transitionView = new TransitionView(this);
-    transitionView.setStartState(stateView1, sv1mpi);
-    transitionView.setEndState(stateView2, sv2mpi);
+    transitionView.setStartState(stateView1);
+    transitionView.setEndState(stateView2);
 
     this.transitions.push(transitionView);
     this.svgRoot.appendChild(transitionView.getSvg());
@@ -91,15 +84,22 @@ export class RenderOrchestrator implements ParentOrchestrator {
     this.enableListeners(this.transitions);
   }
 
-  startNewTransition = (fromState: StateView, mountPointIndex: number) => {
+  startTransitionCurving(): void {
+    this.disableListeners(this.transitions);
+    this.disableListeners(this.states);
+  }
+
+  endTransitionCurving(): void {
+    this.enableListeners(this.transitions);
+    this.enableListeners(this.states);
+  }
+
+  startNewTransition = (fromState: StateView) => {
     this.disableListeners(this.transitions);
 
     // TODO: Think about this inMotion, is it neccessary if orchestrator controls it?
     const transitionView = new TransitionView(this, { inMotion: true });
-    transitionView.setStartState(fromState, mountPointIndex);
-    transitionView.updateEnd(
-      fromState.getAbsoluteMountPoints()[mountPointIndex],
-    );
+    transitionView.setStartState(fromState);
 
     this.transitions.push(transitionView);
     this.svgRoot.appendChild(transitionView.getSvg());
@@ -110,7 +110,7 @@ export class RenderOrchestrator implements ParentOrchestrator {
       const strokeWidth = transitionView.getStrokeWidth();
       const x = point.x - strokeWidth / 2;
       const y = point.y - strokeWidth / 2;
-      transitionView.updateEnd({ x: x, y: y });
+      transitionView.updateEnd({ x, y });
 
       const root = this.svgRoot.getRootNode();
       if (root instanceof ShadowRoot || root instanceof Document) {
@@ -120,11 +120,9 @@ export class RenderOrchestrator implements ParentOrchestrator {
         // FIXME: while starting new, automatically assigned to fromStateMountPoint
         if (mountpoint) {
           const stateName = mountpoint.getAttribute('data-state');
-          const index = Number(mountpoint.getAttribute('data-index'));
-
           const state = this.states.find((s) => s.getName() === stateName);
           if (state) {
-            transitionView.setEndState(state, index);
+            transitionView.setEndState(state);
           }
         }
       }
