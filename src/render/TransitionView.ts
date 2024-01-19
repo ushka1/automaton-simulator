@@ -320,7 +320,7 @@ export class TransitionView implements ListenerSwitcher {
     const { x: mx, y: my } = this.orchestrator.coordsToPoint(e); // mouse x, mouse y
     let { x: sx, y: sy } = this.startCoords; // start x, start y
     let { x: ex, y: ey } = this.endCoords; // end x, end y
-    const reversed = sx > ex || (sx == ex && sy > ex); // determine whether line is reversed
+    const reversed = sx > ex || (sx == ex && sy > ey); // determine whether line is reversed
 
     // swap start and end if
     // point order is reversed <=> line is reversed
