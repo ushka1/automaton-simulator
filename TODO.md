@@ -3,6 +3,7 @@
 ## High Priority
 
 1. Get rid of the mount points, move to smoother approach.
+1. BUD: 5 under 6, does inverse control point distance calculation. (?)
 
 ## Medium Priority
 
