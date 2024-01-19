@@ -38,7 +38,7 @@ class HomePage extends HTMLElement {
         y: height / 2,
       };
 
-      const statesCount = 10;
+      const statesCount = 8;
       const states = [];
       for (let i = 0; i < statesCount; i++) {
         const angle = (i * Math.PI) / (statesCount / 2);
