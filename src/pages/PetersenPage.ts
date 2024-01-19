@@ -16,7 +16,7 @@ class HomePage extends HTMLElement {
 
     const title = shadowRoot.getElementById('title');
     if (title) {
-      title.textContent = 'Free Vertices';
+      title.textContent = 'Petersen Graph';
     }
 
     this.setupRenderOrchestrator();
@@ -39,17 +39,50 @@ class HomePage extends HTMLElement {
         y: height / 2,
       };
 
-      const statesCount = 6;
-      for (let i = 0; i < statesCount; i++) {
-        const angle = (i * Math.PI) / (statesCount / 2);
+      const states = [];
+
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * Math.PI * 2) / 5;
         const x = containerCenter.x + 300 * Math.cos(angle);
         const y = containerCenter.y + 300 * Math.sin(angle);
 
-        renderOrchestrator.addStateFromConfig({
+        const state = renderOrchestrator.addStateFromConfig({
           name: `Q${i}`,
           x: Math.round((x - 35) / 10) * 10,
           y: Math.round((y - 35) / 10) * 10,
         });
+        states.push(state);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * Math.PI * 2) / 5;
+        const x = containerCenter.x + 150 * Math.cos(angle);
+        const y = containerCenter.y + 150 * Math.sin(angle);
+
+        const state = renderOrchestrator.addStateFromConfig({
+          name: `Q${i + 5}`,
+          x: Math.round((x - 35) / 10) * 10,
+          y: Math.round((y - 35) / 10) * 10,
+        });
+        states.push(state);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const state1 = states[i];
+        const state2 = states[(i + 1) % 5];
+        renderOrchestrator.addTransition(state1, state2);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const state1 = states[i];
+        const state2 = states[i + 5];
+        renderOrchestrator.addTransition(state1, state2);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const state1 = states[i + 5];
+        const state2 = states[((i + 2) % 5) + 5];
+        renderOrchestrator.addTransition(state1, state2);
       }
     } else {
       console.error('Could not find svg-container.');
@@ -57,4 +90,4 @@ class HomePage extends HTMLElement {
   }
 }
 
-customElements.define('as-svg-board-page', HomePage);
+customElements.define('as-petersen-page', HomePage);

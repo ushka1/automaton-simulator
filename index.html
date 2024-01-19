@@ -19,7 +19,13 @@
 
     <as-router>
       <template is="as-route" path="/">
-        <as-home-page></as-home-page>
+        <as-svg-board-page></as-svg-board-page>
+      </template>
+      <template is="as-route" path="/cycle">
+        <as-cycle-page></as-cycle-page>
+      </template>
+      <template is="as-route" path="/petersen">
+        <as-petersen-page></as-petersen-page>
       </template>
       <template is="as-route" path="/about">
         <as-about-page></as-about-page>
@@ -29,7 +35,7 @@
       </template>
     </as-router>
 
-    <!-- @include '@html/home-page-template.html' -->
+    <!-- @include '@html/svg-board-page-template.html' -->
     <!-- @include '@html/about-page-template.html' -->
     <!-- @include '@html/not-found-page-template.html' -->
     <!-- @include '@html/svg-board-template.html' -->

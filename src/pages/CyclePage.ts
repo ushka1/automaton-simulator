@@ -16,9 +16,8 @@ class HomePage extends HTMLElement {
 
     const title = shadowRoot.getElementById('title');
     if (title) {
-      title.textContent = 'Free Vertices';
+      title.textContent = 'Cycle Graph';
     }
-
     this.setupRenderOrchestrator();
   }
 
@@ -39,17 +38,25 @@ class HomePage extends HTMLElement {
         y: height / 2,
       };
 
-      const statesCount = 6;
+      const statesCount = 10;
+      const states = [];
       for (let i = 0; i < statesCount; i++) {
         const angle = (i * Math.PI) / (statesCount / 2);
         const x = containerCenter.x + 300 * Math.cos(angle);
         const y = containerCenter.y + 300 * Math.sin(angle);
 
-        renderOrchestrator.addStateFromConfig({
+        const state = renderOrchestrator.addStateFromConfig({
           name: `Q${i}`,
           x: Math.round((x - 35) / 10) * 10,
           y: Math.round((y - 35) / 10) * 10,
         });
+        states.push(state);
+      }
+
+      for (let i = 0; i < states.length; i++) {
+        const state1 = states[i];
+        const state2 = states[(i + 1) % states.length];
+        renderOrchestrator.addTransition(state1, state2);
       }
     } else {
       console.error('Could not find svg-container.');
@@ -57,4 +64,4 @@ class HomePage extends HTMLElement {
   }
 }
 
-customElements.define('as-svg-board-page', HomePage);
+customElements.define('as-cycle-page', HomePage);
