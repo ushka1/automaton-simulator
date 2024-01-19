@@ -2,6 +2,8 @@
 
 ## High Priority
 
+1. Get rid of the mount points, move to smoother approach.
+
 ## Medium Priority
 
 1. Orchestrator:

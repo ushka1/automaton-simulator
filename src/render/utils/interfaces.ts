@@ -23,3 +23,8 @@ export interface ParentOrchestrator {
 
   startNewTransition(fromState: StateView, mountPointIndex: number): void;
 }
+
+export interface StateUpdate {
+  getClosestMountPoint(point: Point): Point;
+  getClosestPointOnStroke(point: Point): Point;
+}

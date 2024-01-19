@@ -8,6 +8,7 @@ import {
   ListenerSwitcher,
   ParentOrchestrator,
   Point,
+  StateUpdate,
 } from './utils/interfaces';
 
 export type StateViewConfig = {
@@ -30,7 +31,7 @@ const defaultConfig: StateViewConfig = {
   name: '',
 };
 
-export class StateView implements ListenerSwitcher {
+export class StateView implements StateUpdate, ListenerSwitcher {
   private orchestrator: ParentOrchestrator;
   private config: StateViewConfig;
 
@@ -179,7 +180,7 @@ export class StateView implements ListenerSwitcher {
   /* ========================= MOUNT POINTS ========================= */
 
   private eventPublisher = new EventPublisher<{
-    mountpoints: [mountPoints: Point[]];
+    update: [stateUpdate: StateUpdate];
   }>();
 
   get subscribe() {
@@ -228,8 +229,7 @@ export class StateView implements ListenerSwitcher {
   }
 
   private publishMountPointsUpdate() {
-    const mountPoints = this.getAbsoluteMountPoints();
-    this.eventPublisher.publish('mountpoints', mountPoints);
+    this.eventPublisher.publish('update', this);
   }
 
   /* ========================= MOUNT POINTS DISPLAY ========================= */
@@ -332,5 +332,26 @@ export class StateView implements ListenerSwitcher {
     }
 
     return closestIndex;
+  }
+
+  getClosestMountPoint(point: Point) {
+    const index = this.getClosestMountPointIndex(point);
+    return this.getAbsoluteMountPoints()[index];
+  }
+
+  getClosestPointOnStroke(point: Point) {
+    const { x, y } = point;
+    const { r } = this.config;
+    const { x: cx, y: cy } = this.getGroupCenterPoint();
+
+    const dx = x - cx;
+    const dy = y - cy;
+    const distance = Math.sqrt(dx ** 2 + dy ** 2);
+
+    const ratio = r / distance;
+    const rx = cx + dx * ratio;
+    const ry = cy + dy * ratio;
+
+    return { x: rx, y: ry };
   }
 }

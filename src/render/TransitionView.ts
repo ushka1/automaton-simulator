@@ -8,6 +8,7 @@ import {
   ListenerSwitcher,
   ParentOrchestrator,
   Point,
+  StateUpdate,
 } from './utils/interfaces';
 
 export type TransitionViewConfig = {
@@ -100,59 +101,63 @@ export class TransitionView implements ListenerSwitcher {
   /* ========================= STATES CONNECTION ========================= */
 
   private startStateView?: StateView;
-  private startMountPointIndex?: number;
   private endStateView?: StateView;
-  private endMountPointIndex?: number;
 
-  setStartState(stateView: StateView, mountPointIndex: number) {
+  setStartState(stateView: StateView) {
     this.unsetStartState();
-
     this.startStateView = stateView;
-    this.startMountPointIndex = mountPointIndex;
 
-    this.updateStartSubscriber(stateView.getAbsoluteMountPoints());
-    stateView.subscribe('mountpoints', this.updateStartSubscriber);
+    this.updateConnections();
+    stateView.subscribe('update', this.updateStartSubscriber);
   }
 
   unsetStartState() {
     if (this.startStateView) {
-      this.startStateView.unsubscribe(
-        'mountpoints',
-        this.updateStartSubscriber,
-      );
+      this.startStateView.unsubscribe('update', this.updateStartSubscriber);
     }
-
     this.startStateView = undefined;
-    this.startMountPointIndex = undefined;
   }
 
-  setEndState(stateView: StateView, mountPointIndex: number) {
+  setEndState(stateView: StateView) {
     this.unsetEndState();
-
     this.endStateView = stateView;
-    this.endMountPointIndex = mountPointIndex;
 
-    this.updateEndSubscriber(stateView.getAbsoluteMountPoints());
-    stateView.subscribe('mountpoints', this.updateEndSubscriber);
+    this.updateConnections();
+    stateView.subscribe('update', this.updateEndSubscriber);
   }
 
   unsetEndState() {
     if (this.endStateView) {
-      this.endStateView.unsubscribe('mountpoints', this.updateEndSubscriber);
+      this.endStateView.unsubscribe('update', this.updateEndSubscriber);
     }
-
     this.endStateView = undefined;
-    this.endMountPointIndex = undefined;
   }
 
-  private updateStartSubscriber = (mountPoints: Point[]) => {
-    const coords = mountPoints[this.startMountPointIndex!];
-    this.updateStart(coords);
+  // TODO: do it just better
+  private updateConnections() {
+    if (this.startStateView && this.endStateView) {
+      this.startCoords = this.startStateView.getGroupCenterPoint();
+      this.endCoords = this.endStateView.getGroupCenterPoint();
+
+      this.updateStartSubscriber(this.startStateView);
+      this.updateEndSubscriber(this.endStateView);
+    }
+  }
+
+  private updateStartSubscriber = (stateUpdate: StateUpdate) => {
+    const point = stateUpdate.getClosestPointOnStroke({
+      x: this.getControlCoords().controlX,
+      y: this.getControlCoords().controlY,
+    });
+    this.updateStart(point);
   };
 
-  private updateEndSubscriber = (mountPoints: Point[]) => {
-    const coords = mountPoints[this.endMountPointIndex!];
-    this.updateEnd(coords);
+  private updateEndSubscriber = (stateUpdate: StateUpdate) => {
+    const point = stateUpdate.getClosestPointOnStroke({
+      x: this.getControlCoords().controlX,
+      y: this.getControlCoords().controlY,
+    });
+    this.updateEnd(point);
   };
 
   /* ========================= UPDATE PATH ========================= */
@@ -337,6 +342,8 @@ export class TransitionView implements ListenerSwitcher {
 
     const rdfl = adfl * sign; // relative distance from line
     this.controlDistance = rdfl;
+
+    this.updateConnections();
     this.updatePathData();
   };
 
