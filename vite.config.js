@@ -73,6 +73,7 @@ const importHtmlPartialsPlugin = () => {
 };
 
 export default defineConfig({
+  base: '/automaton-simulator/',
   plugins: [eslint(), importHtmlPartialsPlugin()],
   resolve: {
     alias: {
