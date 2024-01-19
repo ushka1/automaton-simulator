@@ -27,7 +27,7 @@ const defaultConfig: StateViewConfig = {
   r: 40,
   hm: 10,
   mountPointsNumber: 12,
-  moveStep: 10,
+  moveStep: 1,
   name: '',
 };
 
