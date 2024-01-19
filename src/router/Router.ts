@@ -1,4 +1,4 @@
-import { navigationManager } from './NavigationManager';
+import { base, navigationManager } from './NavigationManager';
 
 class Router extends HTMLElement {
   private routingTable: { [path: string]: Node } = {};
@@ -17,7 +17,7 @@ class Router extends HTMLElement {
       const path = route.getAttribute('path')!;
       const content = route.content.firstElementChild?.cloneNode(true);
       if (content) {
-        this.routingTable[path] = content;
+        this.routingTable[base + path] = content;
       }
     });
 

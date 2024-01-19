@@ -2,6 +2,8 @@
 
 import { EventPublisher } from '@/shared/EventPublisher';
 
+export const base = '/automaton-simulator';
+
 class NavigationManager implements History {
   /* ========================= SINGLETON ========================= */
 
@@ -68,7 +70,7 @@ class NavigationManager implements History {
     unused: string,
     url?: string | URL | null | undefined,
   ): void {
-    this.realHistory.pushState(data, unused, url);
+    this.realHistory.pushState(data, unused, base + url);
     this.eventPublisher.publish('path', location.pathname);
   }
 
@@ -77,7 +79,7 @@ class NavigationManager implements History {
     unused: string,
     url?: string | URL | null | undefined,
   ): void {
-    this.realHistory.replaceState(data, unused, url);
+    this.realHistory.replaceState(data, unused, base + url);
     this.eventPublisher.publish('path', location.pathname);
   }
 
