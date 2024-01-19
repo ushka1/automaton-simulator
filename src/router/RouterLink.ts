@@ -1,3 +1,4 @@
+import { BASE_URL } from '@/shared/constants';
 import { navigationManager } from './NavigationManager';
 
 /**
@@ -15,7 +16,7 @@ class RouterLink extends HTMLAnchorElement {
     this.addEventListener('click', (event) => {
       event.preventDefault();
       const path = this.getAttribute('href');
-      navigationManager.pushState({}, '', path);
+      navigationManager.pushState({}, '', BASE_URL + path);
     });
   }
 

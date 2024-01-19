@@ -1,7 +1,9 @@
-import { base, navigationManager } from './NavigationManager';
+import { BASE_URL } from '@/shared/constants';
+import { navigationManager } from './NavigationManager';
 
 class Router extends HTMLElement {
   private routingTable: { [path: string]: Node } = {};
+  private notFoundPage: Node | null = null;
 
   constructor() {
     super();
@@ -16,13 +18,17 @@ class Router extends HTMLElement {
     routes.forEach((route) => {
       const path = route.getAttribute('path')!;
       const content = route.content.firstElementChild?.cloneNode(true);
+
       if (content) {
-        this.routingTable[base + path] = content;
+        if (path === '*') {
+          this.notFoundPage = content;
+        } else {
+          this.routingTable[BASE_URL + path] = content;
+        }
       }
     });
 
     this.renderRoute(location.pathname);
-
     navigationManager.subscribe('path', this.onPathChange);
   }
 
@@ -35,8 +41,7 @@ class Router extends HTMLElement {
   };
 
   private renderRoute(path: string) {
-    const page = this.routingTable[path] ?? this.routingTable['*'];
-
+    const page = this.routingTable[path] ?? this.notFoundPage;
     if (page) {
       this.shadowRoot!.replaceChildren(page);
     } else {
