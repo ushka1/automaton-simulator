@@ -1,7 +1,7 @@
 import { RenderOrchestrator } from '@/render/RenderOrchestrator';
 import { homePageSheet, sharedSheet } from '@css/index';
 
-class HomePage extends HTMLElement {
+export class PetersenPage extends HTMLElement {
   constructor() {
     super();
 
@@ -9,7 +9,7 @@ class HomePage extends HTMLElement {
     shadowRoot.adoptedStyleSheets = [sharedSheet, homePageSheet];
 
     const template = document.getElementById(
-      'as-svg-board-page',
+      'as-svg-board-container',
     ) as HTMLTemplateElement;
     const content = template.content.cloneNode(true);
     shadowRoot.appendChild(content);
@@ -89,5 +89,3 @@ class HomePage extends HTMLElement {
     }
   }
 }
-
-customElements.define('as-petersen-page', HomePage);

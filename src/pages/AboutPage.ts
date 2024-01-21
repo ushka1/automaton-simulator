@@ -1,6 +1,6 @@
 import { aboutPageSheet, sharedSheet } from '@css/index';
 
-class AboutPage extends HTMLElement {
+export class AboutPage extends HTMLElement {
   constructor() {
     super();
 
@@ -14,5 +14,3 @@ class AboutPage extends HTMLElement {
     shadowRoot.appendChild(content);
   }
 }
-
-customElements.define('as-about-page', AboutPage);

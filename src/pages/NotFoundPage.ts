@@ -1,6 +1,6 @@
 import { notFoundPageSheet, sharedSheet } from '@css/index';
 
-class NotFoundPage extends HTMLElement {
+export class NotFoundPage extends HTMLElement {
   constructor() {
     super();
 
@@ -14,5 +14,3 @@ class NotFoundPage extends HTMLElement {
     shadowRoot.appendChild(content);
   }
 }
-
-customElements.define('as-not-found-page', NotFoundPage);
