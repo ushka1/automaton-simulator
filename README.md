@@ -1,5 +1,7 @@
 # Automaton Simulator
 
+<u>Project under development.</u>
+
 ## Setup guide
 
 1. Run `npm i` to install dependencies.
