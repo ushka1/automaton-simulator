@@ -1,18 +1,26 @@
 # Automaton Simulator
 
-<u>Project under development.</u>
+**WORK IN PROGRESS**
 
-## Setup guide
+## Preview
+
+[Simulator can be previewed here.](https://ushka1.github.io/automaton-simulator/)
+
+## Description
+
+An intuitive tool for constructing and testing state automata (DFA, NFA, e-NFA, PDA) created with pure TypeScript and WebComponents.
+
+## Setup
 
 1. Run `npm i` to install dependencies.
 2. Run `npm run dev` to start the development server.
 
-## Tech stack
+## Docs
 
-- Vite
-- TypeScript
+### Router module
 
-## Used technologies
+![router-module](./docs/router-module.jpg)
 
-- WebComponents
-- SVG
+### Render module
+
+![render-module](./docs/render-module.jpg)
